@@ -313,22 +313,31 @@
     }
 
     async function handleComplaint(event) {
-      event.preventDefault();
-      const pesan = el.complaintMessage.value.trim();
-      if (!pesan) {
-        setFeedback(el.complaintFeedback, "Pesan keluhan wajib diisi.", "error");
-        return;
-      }
-      try {
-        const result = await postJson({ action: "kirimKeluhan", idPelanggan: session.id, pesan: pesan });
-        setFeedback(el.complaintFeedback, "Keluhan berhasil dikirim. WhatsApp admin akan dibuka.", "success");
-        el.complaintForm.reset();
-        const text = encodeURIComponent(`Halo admin, saya ${state.user.nama} (${state.user.id}) mengirim keluhan: ${pesan}`);
-        window.open(`https://wa.me/${APP_CONFIG.WHATSAPP_ADMIN}?text=${text}`, "_blank", "noopener");
-      } catch (error) {
-        setFeedback(el.complaintFeedback, error.message || "Gagal mengirim keluhan.", "error");
-      }
+  event.preventDefault();
+  const pesan = el.complaintMessage.value.trim();
+  if (!pesan) return;
+
+  try {
+    // Gunakan URL parameter untuk GET melalui Proxy
+    const targetUrl = APP_CONFIG.WEB_APP_URL + 
+                     "?action=kirimKeluhan" + 
+                     "&idPelanggan=" + encodeURIComponent(session.id) + 
+                     "&pesan=" + encodeURIComponent(pesan);
+
+    const response = await fetch(targetUrl, { method: "GET" });
+    const result = await response.json();
+
+    if (result.success) {
+      setFeedback(el.complaintFeedback, "Keluhan terkirim!", "success");
+      el.complaintForm.reset();
+      // Buka WA Admin
+      const waText = encodeURIComponent(`Halo admin, saya ${state.user.nama} ingin lapor: ${pesan}`);
+      window.open(`https://wa.me/${APP_CONFIG.WHATSAPP_ADMIN}?text=${waText}`, "_blank");
     }
+  } catch (error) {
+    setFeedback(el.complaintFeedback, "Gagal kirim keluhan.", "error");
+  }
+}
 
     function handleUpgrade() {
       const text = encodeURIComponent(`Halo admin, saya ${session.nama} (${session.id}) ingin upgrade paket internet.`);

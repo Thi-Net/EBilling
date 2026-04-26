@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Admin | Billing RTRW NET</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f3f6fb;
+      --surface: #ffffff;
+      --surface-soft: #eef2ff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --line: #dbe4f0;
+      --indigo: #4f46e5;
+      --rose: #e11d48;
+      --green: #16a34a;
+      --amber: #d97706;
+      --shadow: 0 18px 42px rgba(15, 23, 42, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Plus Jakarta Sans", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(79, 70, 229, 0.08), transparent 26%),
+        linear-gradient(180deg, #f8fbff 0%, #f3f6fb 100%);
+    }
+
+    .container {
+      width: min(1280px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      padding: 22px 0;
+    }
+
+    .topbar-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 18px 20px;
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+    }
+
+    .button {
+      border: 0;
+      border-radius: 14px;
+      padding: 12px 18px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .button-primary {
+      color: #fff;
+      background: linear-gradient(135deg, var(--indigo), #7c3aed);
+    }
+
+    .button-secondary {
+      background: var(--surface-soft);
+      color: var(--text);
+    }
+
+    .button-success {
+      color: #fff;
+      background: var(--green);
+    }
+
+    .button-danger {
+      color: #fff;
+      background: var(--rose);
+    }
+
+    .dashboard {
+      display: grid;
+      gap: 20px;
+      padding-bottom: 36px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--surface);
+      border-radius: 24px;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    .stat-card {
+      background: linear-gradient(180deg, #fff, #f8fbff);
+    }
+
+    .stat-card small {
+      color: var(--muted);
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    .stat-card strong {
+      font-size: 2rem;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1.25fr 0.75fr;
+      gap: 20px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      margin-top: 18px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 980px;
+    }
+
+    th,
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      font-size: 0.94rem;
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 700;
+      background: #f8fbff;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .pill.active {
+      color: #166534;
+      background: #dcfce7;
+    }
+
+    .pill.isolated {
+      color: #92400e;
+      background: #fef3c7;
+    }
+
+    .pill.open {
+      color: #991b1b;
+      background: #fee2e2;
+    }
+
+    .pill.done {
+      color: #166534;
+      background: #dcfce7;
+    }
+
+    .muted {
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .form-group textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      font: inherit;
+      color: var(--text);
+      resize: vertical;
+      outline: none;
+    }
+
+    .form-group textarea:focus {
+      border-color: rgba(79, 70, 229, 0.6);
+      box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
+    }
+
+    .feedback {
+      min-height: 24px;
+      margin-top: 12px;
+      font-size: 0.92rem;
+      color: var(--muted);
+    }
+
+    .feedback.success {
+      color: var(--green);
+    }
+
+    .feedback.error {
+      color: var(--rose);
+    }
+
+    .ticket-list {
+      display: grid;
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .ticket {
+      padding: 16px;
+      border-radius: 18px;
+      background: #f8fbff;
+      border: 1px solid var(--line);
+    }
+
+    .ticket-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .empty-state {
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    @media (max-width: 1100px) {
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 780px) {
+      .container {
+        width: min(100% - 20px, 1280px);
+      }
+
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar-inner {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container topbar">
+    <div class="topbar-inner">
+      <div>
+        <strong style="display:block;font-size:1.1rem;">Dashboard Admin Billing RTRW NET</strong>
+        <span id="adminWelcome" class="muted">Memuat data admin...</span>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="button button-secondary" id="refreshButton" type="button">Refresh</button>
+        <button class="button button-danger" id="logoutButton" type="button">Logout</button>
+      </div>
+    </div>
+  </div>
+
+  <main class="container dashboard">
+    <section class="stats">
+      <article class="card stat-card">
+        <small>Total Pelanggan</small>
+        <strong id="totalPelangganValue">0</strong>
+      </article>
+      <article class="card stat-card">
+        <small>Pelanggan Aktif</small>
+        <strong id="totalAktifValue">0</strong>
+      </article>
+      <article class="card stat-card">
+        <small>Pelanggan Terisolir</small>
+        <strong id="totalIsolirValue">0</strong>
+      </article>
+    </section>
+
+    <section class="grid-2">
+      <article class="card">
+        <h2>Data Pelanggan</h2>
+        <p class="muted">Tabel ini mengambil semua data dari sheet `Data_Pelanggan`.</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nama</th>
+                <th>Paket</th>
+                <th>Harga</th>
+                <th>Status Sistem</th>
+                <th>Jatuh Tempo</th>
+                <th>Status Bayar</th>
+                <th>WhatsApp</th>
+              </tr>
+            </thead>
+            <tbody id="customerTableBody"></tbody>
+          </table>
+        </div>
+      </article>
+
+      <aside class="card">
+        <h2>Broadcast Informasi</h2>
+        <form id="broadcastForm">
+          <div class="form-group">
+            <label for="broadcastMessage">Masukkan Pesan</label>
+            <textarea id="broadcastMessage" placeholder="Contoh: Maintenance jaringan malam ini pukul 23.00 sampai 01.00 WIB." required></textarea>
+          </div>
+          <button class="button button-primary" type="submit">Kirim Broadcast</button>
+          <div id="broadcastFeedback" class="feedback"></div>
+        </form>
+      </aside>
+    </section>
+
+    <section class="card">
+      <h2>Keluhan Pelanggan</h2>
+      <p class="muted">Admin bisa menandai tiket sebagai selesai setelah gangguan ditangani.</p>
+      <div id="ticketList" class="ticket-list"></div>
+    </section>
+  </main>
+
+  <script>
+    const APP_CONFIG = {
+      WEB_APP_URL: "/api/proxy"
+    };
+
+    const session = JSON.parse(localStorage.getItem("billing_session") || "null");
+    if (!session || session.role !== "admin") {
+      window.location.href = "index.html";
+    }
+
+    const el = {
+      adminWelcome: document.getElementById("adminWelcome"),
+      totalPelangganValue: document.getElementById("totalPelangganValue"),
+      totalAktifValue: document.getElementById("totalAktifValue"),
+      totalIsolirValue: document.getElementById("totalIsolirValue"),
+      customerTableBody: document.getElementById("customerTableBody"),
+      ticketList: document.getElementById("ticketList"),
+      broadcastForm: document.getElementById("broadcastForm"),
+      broadcastMessage: document.getElementById("broadcastMessage"),
+      broadcastFeedback: document.getElementById("broadcastFeedback"),
+      refreshButton: document.getElementById("refreshButton"),
+      logoutButton: document.getElementById("logoutButton")
+    };
+
+    function formatCurrency(value) {
+      return new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+        maximumFractionDigits: 0
+      }).format(Number(value || 0));
+    }
+
+    function formatDate(value) {
+      if (!value) return "-";
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return value;
+      return new Intl.DateTimeFormat("id-ID", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+      }).format(date);
+    }
+
+    function buildUrl(action, params = {}) {
+      const url = new URL(APP_CONFIG.WEB_APP_URL);
+      url.searchParams.set("action", action);
+      Object.entries(params).forEach(([key, value]) => {
+        url.searchParams.set(key, value);
+      });
+      return url.toString();
+    }
+
+    async function fetchJson(url) {
+      const response = await fetch(url, { method: "GET" });
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.message || "Permintaan gagal.");
+      }
+      return result;
+    }
+
+    async function postJson(payload) {
+      const response = await fetch(APP_CONFIG.WEB_APP_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "text/plain;charset=utf-8"
+        },
+        body: JSON.stringify(payload)
+      });
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.message || "Permintaan gagal.");
+      }
+      return result;
+    }
+
+    function setFeedback(message, type) {
+      el.broadcastFeedback.textContent = message;
+      el.broadcastFeedback.className = "feedback" + (type ? " " + type : "");
+    }
+
+    function renderCustomers(customers) {
+      if (!customers.length) {
+        el.customerTableBody.innerHTML = '<tr><td colspan="8" class="empty-state">Belum ada data pelanggan.</td></tr>';
+        return;
+      }
+
+      el.customerTableBody.innerHTML = customers.map((customer) => {
+        const systemClass = String(customer.statusSistem || "").toUpperCase() === "AKTIF" ? "active" : "isolated";
+        return `
+          <tr>
+            <td>${customer.id}</td>
+            <td>${customer.nama}</td>
+            <td>${customer.paket}</td>
+            <td>${formatCurrency(customer.harga)}</td>
+            <td><span class="pill ${systemClass}">${customer.statusSistem}</span></td>
+            <td>${formatDate(customer.tglJatuhTempo)}</td>
+            <td>${customer.statusPembayaran}</td>
+            <td>${customer.noWhatsApp || "-"}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function renderTickets(tickets) {
+      if (!tickets.length) {
+        el.ticketList.innerHTML = '<div class="empty-state">Belum ada tiket keluhan.</div>';
+        return;
+      }
+
+      el.ticketList.innerHTML = tickets.map((ticket) => {
+        const done = String(ticket.status || "").toUpperCase() === "SELESAI";
+        return `
+          <article class="ticket">
+            <div class="ticket-header">
+              <div>
+                <strong>${ticket.idTiket}</strong>
+                <div class="muted">${ticket.nama} • ${ticket.idPelanggan} • ${formatDate(ticket.tgl)}</div>
+              </div>
+              <span class="pill ${done ? "done" : "open"}">${ticket.status}</span>
+            </div>
+            <p style="margin:0 0 14px;line-height:1.7;">${ticket.pesan}</p>
+            ${done ? "" : `<button class="button button-success" type="button" data-ticket="${ticket.idTiket}">Selesai</button>`}
+          </article>
+        `;
+      }).join("");
+
+      el.ticketList.querySelectorAll("[data-ticket]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          try {
+            await postJson({
+              action: "updateStatusKeluhan",
+              idTiket: button.dataset.ticket
+            });
+            await loadDashboard();
+          } catch (error) {
+            alert(error.message || "Gagal mengubah status keluhan.");
+          }
+        });
+      });
+    }
+
+    function renderAdmin(data) {
+      el.adminWelcome.textContent = `${session.nama} • role admin`;
+      el.totalPelangganValue.textContent = data.statistik.totalPelanggan;
+      el.totalAktifValue.textContent = data.statistik.aktif;
+      el.totalIsolirValue.textContent = data.statistik.terisolir;
+      renderCustomers(data.pelanggan || []);
+      renderTickets(data.keluhan || []);
+    }
+
+    async function loadDashboard() {
+      if (!APP_CONFIG.WEB_APP_URL || APP_CONFIG.WEB_APP_URL.includes("REPLACE_WITH")) {
+        alert("Isi WEB_APP_URL di admin.html terlebih dulu.");
+        return;
+      }
+
+      try {
+        const result = await fetchJson(buildUrl("dashboardAdmin", { id: session.id }));
+        renderAdmin(result.data);
+      } catch (error) {
+        alert(error.message || "Gagal memuat dashboard admin.");
+      }
+    }
+
+    async function handleBroadcast(event) {
+      event.preventDefault();
+      const pesan = el.broadcastMessage.value.trim();
+
+      if (!pesan) {
+        setFeedback("Pesan broadcast wajib diisi.", "error");
+        return;
+      }
+
+      try {
+        await postJson({
+          action: "updateBroadcast",
+          pesan: pesan,
+          adminId: session.id
+        });
+        setFeedback("Broadcast berhasil diperbarui.", "success");
+        el.broadcastForm.reset();
+        await loadDashboard();
+      } catch (error) {
+        setFeedback(error.message || "Gagal menyimpan broadcast.", "error");
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem("billing_session");
+      window.location.href = "index.html";
+    }
+
+    el.broadcastForm.addEventListener("submit", handleBroadcast);
+    el.refreshButton.addEventListener("click", loadDashboard);
+    el.logoutButton.addEventListener("click", logout);
+
+    loadDashboard();
+  </script>
+</body>
+</html>
+ 

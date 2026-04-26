@@ -321,25 +321,28 @@
 
     async function handleBroadcast(event) {
   event.preventDefault();
-  const pesan = document.getElementById("broadcastMessage").value.trim();
+  const pesan = el.broadcastMessage.value.trim();
   if (!pesan) return;
 
   try {
-    // Susun URL untuk Proxy
+    // Sesuaikan parameter dengan yang diminta doGet (pesan & adminId)
     const targetUrl = APP_CONFIG.WEB_APP_URL + 
-                     "?action=kirimBroadcast" + 
-                     "&pesan=" + encodeURIComponent(pesan);
+                     "?action=updateBroadcast" + 
+                     "&pesan=" + encodeURIComponent(pesan) + 
+                     "&adminId=" + encodeURIComponent(session.id);
 
     const response = await fetch(targetUrl, { method: "GET" });
     const result = await response.json();
 
     if (result.success) {
       alert("Broadcast berhasil dikirim!");
-      document.getElementById("broadcastForm").reset();
-      loadAdminData(); // Refresh data
+      el.broadcastForm.reset();
+      await loadDashboard(); // Refresh data
+    } else {
+      alert("Gagal: " + result.message);
     }
   } catch (error) {
-    alert("Gagal kirim broadcast: " + error.message);
+    alert("Kesalahan koneksi: " + error.message);
   }
 }
 

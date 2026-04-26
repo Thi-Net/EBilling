@@ -721,7 +721,7 @@
 
       try {
         // PERBAIKAN: Gunakan penggabungan teks manual agar tidak error di browser
-        const targetUrl = APP_CONFIG.WEB_APP_URL + "?action=login&id=" + u + "&pass=" + p;
+        const targetUrl = APP_CONFIG.WEB_APP_URL + "?action=login&id=" + userId + "&pass=" + password;
 
         const response = await fetch(targetUrl, { method: "GET" });
         const result = await response.json();

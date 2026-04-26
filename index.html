@@ -720,26 +720,25 @@
       }
 
       try {
-        const url = new URL(APP_CONFIG.WEB_APP_URL);
-        url.searchParams.set("action", "login");
-        url.searchParams.set("id", userId);
-        url.searchParams.set("password", password);
+        // PERBAIKAN: Gunakan penggabungan teks manual agar tidak error di browser
+        const targetUrl = APP_CONFIG.WEB_APP_URL + "?action=login&id=" + u + "&pass=" + p;
 
-        const response = await fetch(url.toString(), { method: "GET" });
+        const response = await fetch(targetUrl, { method: "GET" });
         const result = await response.json();
 
         if (!result.success) {
-          throw new Error(result.message || "Login gagal.");
+          throw new Error(result.message || "ID atau Password salah.");
         }
 
         saveSession(result);
-        setStatus("Login berhasil. Mengalihkan halaman...", "success");
+        setStatus("Login berhasil. Mengalihkan...", "success");
 
         window.setTimeout(() => {
           window.location.href = result.role === "admin" ? "admin.html" : "dashboard.html";
-        }, 600);
+        }, 800);
+
       } catch (error) {
-        setStatus(error.message || "Terjadi kesalahan saat login.", "error");
+        setStatus(error.message || "Terjadi kesalahan koneksi.", "error");
       }
     }
 

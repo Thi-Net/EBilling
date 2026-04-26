@@ -253,42 +253,53 @@
     }
 
     function renderTickets(tickets) {
-      if (!tickets.length) {
-        el.ticketList.innerHTML = '<div class="empty-state">Belum ada tiket keluhan.</div>';
-        return;
+  if (!tickets.length) {
+    el.ticketList.innerHTML = '<div class="empty-state">Belum ada tiket keluhan.</div>';
+    return;
+  }
+
+  el.ticketList.innerHTML = tickets.map((ticket) => {
+    const done = String(ticket.status || "").toUpperCase() === "SELESAI";
+    return `
+      <article class="ticket">
+        <div class="ticket-header">
+          <div>
+            <strong>${ticket.idTiket}</strong>
+            <div class="muted">${ticket.nama} • ${ticket.idPelanggan} • ${formatDate(ticket.tgl)}</div>
+          </div>
+          <span class="pill ${done ? "done" : "open"}">${ticket.status}</span>
+        </div>
+        <p style="margin:0 0 14px;line-height:1.7;">${ticket.pesan}</p>
+        ${done ? "" : `<button class="button button-success" type="button" data-ticket="${ticket.idTiket}">Selesai</button>`}
+      </article>
+    `;
+  }).join("");
+
+  el.ticketList.querySelectorAll("[data-ticket]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      if (!confirm("Tandai keluhan ini sebagai selesai?")) return;
+      
+      try {
+        // PERBAIKAN: Kirim lewat GET Proxy agar tidak "Action tidak dikenali"
+        const targetUrl = APP_CONFIG.WEB_APP_URL + 
+                         "?action=updateStatusKeluhan" + 
+                         "&idTiket=" + encodeURIComponent(button.dataset.ticket);
+
+        const response = await fetch(targetUrl, { method: "GET" });
+        const result = await response.json();
+
+        if (!result.success) {
+          throw new Error(result.message || "Gagal mengubah status.");
+        }
+
+        alert("Tiket berhasil diselesaikan!");
+        await loadDashboard(); // Refresh data di layar
+      } catch (error) {
+        alert(error.message || "Gagal mengubah status keluhan.");
       }
-
-      el.ticketList.innerHTML = tickets.map((ticket) => {
-        const done = String(ticket.status || "").toUpperCase() === "SELESAI";
-        return `
-          <article class="ticket">
-            <div class="ticket-header">
-              <div>
-                <strong>${ticket.idTiket}</strong>
-                <div class="muted">${ticket.nama} • ${ticket.idPelanggan} • ${formatDate(ticket.tgl)}</div>
-              </div>
-              <span class="pill ${done ? "done" : "open"}">${ticket.status}</span>
-            </div>
-            <p style="margin:0 0 14px;line-height:1.7;">${ticket.pesan}</p>
-            ${done ? "" : `<button class="button button-success" type="button" data-ticket="${ticket.idTiket}">Selesai</button>`}
-          </article>
-        `;
-      }).join("");
-
-      el.ticketList.querySelectorAll("[data-ticket]").forEach((button) => {
-        button.addEventListener("click", async () => {
-          try {
-            await postJson({
-              action: "updateStatusKeluhan",
-              idTiket: button.dataset.ticket
-            });
-            await loadDashboard();
-          } catch (error) {
-            alert(error.message || "Gagal mengubah status keluhan.");
-          }
-        });
-      });
-    }
+    });
+  });
+}
 
     function renderAdmin(data) {
       el.adminWelcome.textContent = `${session.nama} • role admin`;
@@ -309,27 +320,28 @@
     }
 
     async function handleBroadcast(event) {
-      event.preventDefault();
-      const pesan = el.broadcastMessage.value.trim();
+  event.preventDefault();
+  const pesan = document.getElementById("broadcastMessage").value.trim();
+  if (!pesan) return;
 
-      if (!pesan) {
-        setFeedback("Pesan broadcast wajib diisi.", "error");
-        return;
-      }
+  try {
+    // Susun URL untuk Proxy
+    const targetUrl = APP_CONFIG.WEB_APP_URL + 
+                     "?action=kirimBroadcast" + 
+                     "&pesan=" + encodeURIComponent(pesan);
 
-      try {
-        await postJson({
-          action: "updateBroadcast",
-          pesan: pesan,
-          adminId: session.id
-        });
-        setFeedback("Broadcast berhasil diperbarui.", "success");
-        el.broadcastMessage.value = "";
-        await loadDashboard();
-      } catch (error) {
-        setFeedback(error.message || "Gagal menyimpan broadcast.", "error");
-      }
+    const response = await fetch(targetUrl, { method: "GET" });
+    const result = await response.json();
+
+    if (result.success) {
+      alert("Broadcast berhasil dikirim!");
+      document.getElementById("broadcastForm").reset();
+      loadAdminData(); // Refresh data
     }
+  } catch (error) {
+    alert("Gagal kirim broadcast: " + error.message);
+  }
+}
 
     function logout() {
       localStorage.removeItem("billing_session");

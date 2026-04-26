@@ -318,7 +318,10 @@
   if (!pesan) return;
 
   try {
-    // Gunakan URL parameter untuk GET melalui Proxy
+    // Tampilkan status loading
+    setFeedback(el.complaintFeedback, "Mengirim keluhan...", "info");
+
+    // PERBAIKAN: Gunakan GET melalui Proxy Vercel
     const targetUrl = APP_CONFIG.WEB_APP_URL + 
                      "?action=kirimKeluhan" + 
                      "&idPelanggan=" + encodeURIComponent(session.id) + 
@@ -328,14 +331,19 @@
     const result = await response.json();
 
     if (result.success) {
-      setFeedback(el.complaintFeedback, "Keluhan terkirim!", "success");
+      setFeedback(el.complaintFeedback, "Keluhan terhasil dikirim!", "success");
       el.complaintForm.reset();
-      // Buka WA Admin
-      const waText = encodeURIComponent(`Halo admin, saya ${state.user.nama} ingin lapor: ${pesan}`);
+      
+      // Opsional: Buka WhatsApp Admin otomatis
+      const waText = encodeURIComponent(`Halo Admin ThiNet, saya ${session.nama} ingin melaporkan keluhan: ${pesan}`);
       window.open(`https://wa.me/${APP_CONFIG.WHATSAPP_ADMIN}?text=${waText}`, "_blank");
+      
+      await loadDashboard(); // Refresh data keluhan di bawahnya
+    } else {
+      throw new Error(result.message || "Gagal mengirim keluhan.");
     }
   } catch (error) {
-    setFeedback(el.complaintFeedback, "Gagal kirim keluhan.", "error");
+    setFeedback(el.complaintFeedback, error.message || "Terjadi kesalahan koneksi.", "error");
   }
 }
 

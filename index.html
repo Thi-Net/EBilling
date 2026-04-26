@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Billing ThiNet</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #08111f;
+      --bg-soft: rgba(255, 255, 255, 0.06);
+      --panel: rgba(15, 23, 42, 0.72);
+      --line: rgba(255, 255, 255, 0.12);
+      --text: #edf2ff;
+      --muted: #b8c3e0;
+      --indigo: #6366f1;
+      --rose: #f43f5e;
+      --lime: #22c55e;
+      --warning: #f59e0b;
+      --shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Plus Jakarta Sans", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(99, 102, 241, 0.22), transparent 28%),
+        radial-gradient(circle at top right, rgba(244, 63, 94, 0.2), transparent 30%),
+        linear-gradient(160deg, #040816 0%, #0b1324 45%, #111827 100%);
+      min-height: 100vh;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .container {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .navbar-wrap {
+      position: sticky;
+      top: 16px;
+      z-index: 50;
+      padding-top: 16px;
+    }
+
+    .navbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 18px;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: rgba(7, 11, 24, 0.56);
+      backdrop-filter: blur(16px);
+      box-shadow: var(--shadow);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+
+    .brand img {
+      height: 40px;
+      width: auto;
+      object-fit: contain;
+      border-radius: 10px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 0.95rem;
+      align-items: center;
+    }
+
+    .nav-links a:hover {
+      color: var(--text);
+    }
+
+    .nav-login {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 16px;
+      border-radius: 999px;
+      color: #fff;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--indigo), var(--rose));
+      box-shadow: 0 12px 24px rgba(99, 102, 241, 0.22);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 28px;
+      align-items: start;
+      padding: 72px 0 44px;
+    }
+
+    .hero-copy h1 {
+      margin: 0 0 16px;
+      font-size: clamp(2.3rem, 4vw, 4.5rem);
+      line-height: 1.02;
+    }
+
+    .hero-copy p {
+      margin: 0 0 26px;
+      color: var(--muted);
+      font-size: 1.02rem;
+      line-height: 1.8;
+      max-width: 60ch;
+    }
+
+    .hero-badges,
+    .mini-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .badge,
+    .chip {
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+      font-size: 0.92rem;
+    }
+
+    #heroSliderBadge {
+      padding: 14px 22px;
+      font-size: 1.08rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin: 32px 0 28px;
+      min-height: 56px;
+      align-items: flex-end;
+    }
+
+    .hero-slider-content {
+      min-height: 520px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .hero-visual {
+      margin-top: 10px;
+      padding: 22px;
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.05);
+      min-height: 320px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hero-visual svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .button {
+      border: 0;
+      border-radius: 16px;
+      padding: 14px 20px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.18s ease, opacity 0.18s ease;
+    }
+
+    .button:hover {
+      transform: translateY(-1px);
+    }
+
+    .button-primary {
+      color: #fff;
+      background: linear-gradient(135deg, var(--indigo), var(--rose));
+      box-shadow: 0 14px 30px rgba(99, 102, 241, 0.25);
+    }
+
+    .button-secondary {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .glass-card,
+    .section-card,
+    .login-card {
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background: var(--panel);
+      backdrop-filter: blur(20px);
+      box-shadow: var(--shadow);
+    }
+
+    section {
+      padding: 28px 0;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .section-head h2 {
+      margin: 0 0 8px;
+      font-size: clamp(1.5rem, 2vw, 2.3rem);
+    }
+
+    .section-head p {
+      margin: 0;
+      color: var(--muted);
+      max-width: 62ch;
+      line-height: 1.7;
+    }
+
+    .package-grid,
+    .feature-grid,
+    .utility-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .package-card,
+    .feature-card,
+    .utility-card {
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .package-card.highlight {
+      border-color: rgba(99, 102, 241, 0.4);
+      background:
+        linear-gradient(180deg, rgba(99, 102, 241, 0.14), rgba(255, 255, 255, 0.04)),
+        var(--panel);
+    }
+
+    .package-card .price {
+      margin: 16px 0;
+      font-size: 2.4rem;
+      font-weight: 800;
+    }
+
+    .package-card ul,
+    .feature-card ul {
+      padding-left: 18px;
+      color: var(--muted);
+      line-height: 1.8;
+    }
+
+    .login-section {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      padding-bottom: 70px;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    .login-card,
+    .section-card {
+      padding: 24px;
+    }
+
+    .login-card h3,
+    .section-card h3 {
+      margin-top: 0;
+      font-size: 1.4rem;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      font: inherit;
+      outline: none;
+    }
+
+    .form-group input:focus {
+      border-color: rgba(99, 102, 241, 0.7);
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.16);
+    }
+
+    .helper-text,
+    .status {
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.7;
+    }
+
+    .status {
+      min-height: 24px;
+      margin-top: 12px;
+    }
+
+    .status.error {
+      color: #fecaca;
+    }
+
+    .status.success {
+      color: #bbf7d0;
+    }
+
+    footer {
+      padding: 16px 0 40px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    @media (max-width: 980px) {
+      .hero,
+      .login-section,
+      .package-grid,
+      .feature-grid,
+      .utility-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .navbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .nav-links {
+        gap: 12px 18px;
+      }
+
+      .hero-slider-content {
+        min-height: auto;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .container {
+        width: min(100% - 20px, 1180px);
+      }
+
+      .hero {
+        padding-top: 42px;
+      }
+
+      .hero-actions,
+      .hero-badges {
+        flex-direction: column;
+      }
+
+      .hero-visual {
+        min-height: 240px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container navbar-wrap">
+    <nav class="navbar">
+      <div class="brand">
+        <img src="logo.png" alt="Logo RTRW NET">
+        <div>
+          <div>Billing ThiNet</div>
+          <small style="color: var(--muted); font-weight: 600;">Internet Cepat Harga Bersahabat</small>
+        </div>
+      </div>
+      <div class="nav-links">
+        <a class="nav-login" href="#login">Login</a>
+        <a href="#home">Home</a>
+        <a href="#paket">Paket</a>
+        <a href="#fitur">Fitur</a>
+        <a href="#android">Android</a>
+        <a href="#pembayaran">Pembayaran</a>
+      </div>
+    </nav>
+  </div>
+
+  <main class="container">
+    <section class="hero" id="home">
+      <div class="hero-copy">
+        <div class="hero-badges">
+          <div id="heroSliderBadge" class="badge"></div>
+        </div>
+        <div class="hero-slider-content">
+          <h1 id="heroTitle" style="display: none;">Internet Stabil untuk Rumah &amp; Usaha Anda</h1>
+          <div id="heroVisual" class="hero-visual"></div>
+          <p id="heroDescription">
+            Nikmati koneksi internet yang stabil untuk kebutuhan rumah, kerja, belajar, hingga usaha harian.
+            Didukung teknisi lokal yang cepat respon, harga transparan tanpa biaya membingungkan, dan paket yang cocok untuk keluarga maupun UMKM.
+          </p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#login">Daftar Sekarang</a>
+          </div>
+        </div>
+        <div class="mini-grid">
+          <span class="chip">Pembayaran Mudah dan Langusng Aktif</span>
+          <span class="chip">Pelayanan Cepat</span>
+          <span class="chip">Internet Cepat dan Stabil</span>
+        </div>
+      </div>
+
+      <article class="login-card" id="login">
+        <h3>Login</h3>
+        <p class="helper-text">Masukkan ID pelanggan.</p>
+        <form id="loginForm">
+          <div class="form-group">
+            <label for="userId">ID Pelanggan</label>
+            <input id="userId" name="userId" type="text" placeholder="Contoh: USER1" required>
+          </div>
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" placeholder="Masukkan password" required>
+          </div>
+          <button class="button button-primary" type="submit" style="width: 100%;">Masuk ke Sistem</button>
+          <div id="loginStatus" class="status"></div>
+        </form>
+      </article>
+    </section>
+
+    <section id="paket">
+      <div class="section-head">
+        <div>
+          <h2>Pilih Paket Sesuai Kebutuhan Anda</h2>
+          <p>Pilihan 2 Paket Dengan Harga yang Terjangkau dan Kualitas Terbaik.</p>
+        </div>
+      </div>
+      <div class="package-grid">
+        <article class="glass-card package-card">
+          <span class="chip">Paket Hemat</span>
+          <h3>Paket Cermat</h3>
+          <div class="price">Rp100.000</div>
+          <ul>
+            <li>Untuk browsing, belajar, dan streaming ringan</li>
+            <li>Tagihan bulanan tetap</li>
+            <li>Cocok untuk 2-3 device</li>
+          </ul>
+        </article>
+        <article class="glass-card package-card highlight">
+          <span class="chip" style="background: rgba(244, 63, 94, 0.18);">Paling Laris</span>
+          <h3>Paket Ngebut</h3>
+          <div class="price">Rp200.000</div>
+          <ul>
+            <li>Untuk streaming, meeting, CCTV, dan multi-device</li>
+            <li>Prioritas untuk keluarga aktif internet</li>
+            <li>Kualitas Internet Lebih Baik dan Latensi Rendah</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section id="fitur">
+      <div class="section-head">
+        <div>
+          <h2>Kenapa Harus Menggunakan Layanan Internet dari ThiNet?</h2>
+          <p>Fitur-fitur dan Keunggulan yang didapatkan dari Layanan Internet Kami.</p>
+        </div>
+      </div>
+      <div class="feature-grid">
+        <article class="glass-card feature-card">
+          <h3>Internet Stabil dan Cepat🚀</h3>
+          <ul>
+            <li>Pilihan Kecepatan Internet yang Cepat</li>
+            <li>Latensi Rendah</li>
+            <li>Pisah Traffic sehingga Game Online Tetap Lancar</li>
+          </ul>
+        </article>
+        <article class="glass-card feature-card">
+          <h3>Full Fiber Optic🔗</h3>
+          <ul>
+            <li>Jaringan Full Menggunakan Fiber Optic</li>
+            <li>Jaringan Tahan Cuaca Ekstrim</li>
+            <li>Kapasitas Data Diterima Lebih Banyak</li>
+          </ul>
+        </article>
+        <article class="glass-card feature-card">
+          <h3>Dashboard Pelanggan🖥️</h3>
+          <ul>
+            <li>Lihat Tagihan, Informasi Paket, Status Sistem</li>
+            <li>Kirim Keluhan Real Time</li>
+            <li>Akses Broadcasht Informasi dari Admin</li>
+          </ul>
+        </article>
+        <article class="glass-card feature-card">
+          <h3>Pembayaran Otomatis</h3>
+          <ul>
+            <li>Melakukan Pembayaran Sesuai Tagihan Melalui QRIS</li>
+            <li>Status Pembayaran Otomatis Update</li>
+            <li>Menerima segala Metode Pembayaran</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section id="android">
+      <div class="section-head">
+        <div>
+          <h2>Akses ringan dari Android</h2>
+          <p>Frontend dibuat tanpa framework agar cepat dimuat di browser Android dan mudah di-host di mana saja.</p>
+        </div>
+      </div>
+      <div class="utility-grid">
+        <article class="glass-card utility-card">
+          <h3>Mobile Friendly</h3>
+          <p class="helper-text">Semua halaman responsif, ringan, dan bisa dipakai sebagai web app internal untuk admin maupun pelanggan.</p>
+        </article>
+        <article class="glass-card utility-card" id="pembayaran">
+          <h3>Pembayaran Digital</h3>
+          <p class="helper-text">Pelanggan bisa langsung generate pembayaran QRIS melalui Midtrans Snap dari dashboard client tanpa perlu kirim foto transfer manual.</p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Billing RTRW NET berbasis HTML, JavaScript, Google Apps Script, Google Sheets, Midtrans, dan simulasi Mikrotik.
+  </footer>
+
+  <script>
+    const APP_CONFIG = {
+      WEB_APP_URL: "/api/proxy"
+    };
+
+    const loginForm = document.getElementById("loginForm");
+    const loginStatus = document.getElementById("loginStatus");
+    const heroSliderBadge = document.getElementById("heroSliderBadge");
+    const heroTitle = document.getElementById("heroTitle");
+    const heroDescription = document.getElementById("heroDescription");
+    const heroVisual = document.getElementById("heroVisual");
+    const heroSliderItems = [
+      {
+        badge: "Internet stabil tanpa lemot",
+        title: "Internet Stabil untuk Streaming, Kerja, dan Belajar",
+        description: "Koneksi dirancang untuk kebutuhan harian rumah dan usaha agar tetap lancar saat meeting online, streaming, CCTV, hingga penggunaan banyak perangkat sekaligus.",
+        visual: `
+          <svg viewBox="0 0 520 280" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <defs>
+              <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#6366f1"/>
+                <stop offset="100%" stop-color="#f43f5e"/>
+              </linearGradient>
+            </defs>
+            <rect width="520" height="280" rx="24" fill="#0f172a"/>
+            <circle cx="110" cy="140" r="54" fill="rgba(99,102,241,0.18)"/>
+            <circle cx="400" cy="92" r="42" fill="rgba(244,63,94,0.18)"/>
+            <rect x="70" y="168" width="380" height="18" rx="9" fill="rgba(255,255,255,0.08)"/>
+            <rect x="92" y="120" width="52" height="66" rx="14" fill="url(#g1)"/>
+            <rect x="176" y="96" width="52" height="90" rx="14" fill="url(#g1)" opacity="0.85"/>
+            <rect x="260" y="74" width="52" height="112" rx="14" fill="url(#g1)" opacity="0.72"/>
+            <rect x="344" y="48" width="52" height="138" rx="14" fill="url(#g1)" opacity="0.6"/>
+            <path d="M96 60c22-20 45-29 70-28 36 1 66 16 89 42" fill="none" stroke="#a5b4fc" stroke-width="10" stroke-linecap="round"/>
+            <path d="M281 73c18-13 35-20 53-20 28 0 52 13 72 38" fill="none" stroke="#fda4af" stroke-width="10" stroke-linecap="round"/>
+          </svg>
+        `
+      },
+      {
+        badge: "Support teknisi lokal cepat",
+        title: "Teknisi Lokal Siap Respon Lebih Cepat",
+        description: "Saat ada kendala jaringan, tim teknisi lokal lebih mudah dijangkau dan lebih cepat datang ke lokasi sehingga gangguan bisa segera ditangani tanpa menunggu lama.",
+        visual: `
+          <svg viewBox="0 0 520 280" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <defs>
+              <linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#6366f1"/>
+                <stop offset="100%" stop-color="#f43f5e"/>
+              </linearGradient>
+            </defs>
+            <rect width="520" height="280" rx="24" fill="#0f172a"/>
+            <rect x="72" y="74" width="168" height="122" rx="24" fill="rgba(99,102,241,0.15)"/>
+            <rect x="280" y="56" width="168" height="158" rx="24" fill="rgba(244,63,94,0.12)"/>
+            <circle cx="156" cy="136" r="36" fill="url(#g2)"/>
+            <path d="M140 136h32M156 120v32" stroke="#fff" stroke-width="10" stroke-linecap="round"/>
+            <path d="M332 150c14-28 32-47 58-58 16-7 33-10 53-10" fill="none" stroke="#fda4af" stroke-width="12" stroke-linecap="round"/>
+            <path d="M329 182c24 7 47 9 70 5 23-4 41-13 56-26" fill="none" stroke="#a5b4fc" stroke-width="12" stroke-linecap="round"/>
+            <circle cx="392" cy="116" r="16" fill="#fff"/>
+            <circle cx="431" cy="98" r="11" fill="#fff" opacity="0.85"/>
+            <circle cx="449" cy="139" r="9" fill="#fff" opacity="0.7"/>
+          </svg>
+        `
+      },
+      {
+        badge: "Harga terjangkau & transparan",
+        title: "Harga Jelas, Transparan, dan Mudah Direncanakan",
+        description: "Biaya langganan dibuat sederhana dan terbuka agar pelanggan bisa memilih paket sesuai kebutuhan tanpa khawatir ada tagihan tambahan yang membingungkan.",
+        visual: `
+          <svg viewBox="0 0 520 280" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <defs>
+              <linearGradient id="g3" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#6366f1"/>
+                <stop offset="100%" stop-color="#f43f5e"/>
+              </linearGradient>
+            </defs>
+            <rect width="520" height="280" rx="24" fill="#0f172a"/>
+            <rect x="68" y="62" width="172" height="156" rx="24" fill="rgba(255,255,255,0.05)"/>
+            <rect x="280" y="46" width="172" height="188" rx="24" fill="rgba(255,255,255,0.05)"/>
+            <circle cx="154" cy="140" r="48" fill="url(#g3)"/>
+            <path d="M154 116v48M134 132c0-8 8-14 20-14h14c10 0 18 6 18 14s-8 14-18 14h-28c-10 0-18 6-18 14s8 14 18 14h14c12 0 20-6 20-14" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+            <rect x="314" y="82" width="102" height="20" rx="10" fill="url(#g3)"/>
+            <rect x="314" y="122" width="78" height="16" rx="8" fill="#a5b4fc"/>
+            <rect x="314" y="154" width="112" height="16" rx="8" fill="#fda4af"/>
+            <rect x="314" y="186" width="66" height="16" rx="8" fill="#c4b5fd"/>
+          </svg>
+        `
+      },
+      {
+        badge: "Cocok untuk keluarga & usaha",
+        title: "Satu Layanan untuk Rumah, Toko, dan UMKM",
+        description: "Paket internet fleksibel untuk keluarga, toko online, kantor kecil, dan usaha rumahan yang membutuhkan koneksi stabil setiap hari dengan biaya yang tetap terjangkau.",
+        visual: `
+          <svg viewBox="0 0 520 280" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <defs>
+              <linearGradient id="g4" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#6366f1"/>
+                <stop offset="100%" stop-color="#f43f5e"/>
+              </linearGradient>
+            </defs>
+            <rect width="520" height="280" rx="24" fill="#0f172a"/>
+            <path d="M74 164 150 98l74 66v56H74z" fill="rgba(99,102,241,0.22)"/>
+            <path d="M290 148h122l26 26v46H264v-46z" fill="rgba(244,63,94,0.18)"/>
+            <path d="M60 170 150 90l90 80" fill="none" stroke="#a5b4fc" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+            <rect x="112" y="160" width="34" height="60" rx="12" fill="#fff"/>
+            <rect x="304" y="88" width="92" height="60" rx="18" fill="url(#g4)"/>
+            <path d="M328 118h44M350 96v44" stroke="#fff" stroke-width="10" stroke-linecap="round"/>
+            <circle cx="406" cy="194" r="16" fill="#fff"/>
+            <circle cx="314" cy="194" r="16" fill="#fff"/>
+          </svg>
+        `
+      }
+    ];
+    let heroSliderIndex = 0;
+
+    function setStatus(message, type) {
+      loginStatus.textContent = message;
+      loginStatus.className = "status" + (type ? " " + type : "");
+    }
+
+    function startHeroSlider() {
+      if (!heroSliderBadge || !heroTitle || !heroDescription || !heroVisual) return;
+
+      function renderHeroSlide() {
+        var slide = heroSliderItems[heroSliderIndex];
+        heroSliderBadge.textContent = slide.badge;
+        heroDescription.textContent = slide.description;
+        heroVisual.innerHTML = slide.visual;
+      }
+
+      renderHeroSlide();
+      window.setInterval(() => {
+        heroSliderIndex = (heroSliderIndex + 1) % heroSliderItems.length;
+        renderHeroSlide();
+      }, 3000);
+    }
+
+    function saveSession(payload) {
+      localStorage.setItem("billing_session", JSON.stringify({
+        role: payload.role,
+        id: payload.user.id,
+        nama: payload.user.nama,
+        loginAt: new Date().toISOString()
+      }));
+    }
+
+    async function handleLogin(event) {
+      event.preventDefault();
+      setStatus("Memeriksa akun...", "");
+
+      const userId = document.getElementById("userId").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      if (!APP_CONFIG.WEB_APP_URL || APP_CONFIG.WEB_APP_URL.includes("REPLACE_WITH")) {
+        setStatus("Isi dulu WEB_APP_URL di file index.html sebelum login.", "error");
+        return;
+      }
+
+      try {
+        const url = new URL(APP_CONFIG.WEB_APP_URL);
+        url.searchParams.set("action", "login");
+        url.searchParams.set("id", userId);
+        url.searchParams.set("password", password);
+
+        const response = await fetch(url.toString(), { method: "GET" });
+        const result = await response.json();
+
+        if (!result.success) {
+          throw new Error(result.message || "Login gagal.");
+        }
+
+        saveSession(result);
+        setStatus("Login berhasil. Mengalihkan halaman...", "success");
+
+        window.setTimeout(() => {
+          window.location.href = result.role === "admin" ? "admin.html" : "dashboard.html";
+        }, 600);
+      } catch (error) {
+        setStatus(error.message || "Terjadi kesalahan saat login.", "error");
+      }
+    }
+
+    loginForm.addEventListener("submit", handleLogin);
+    startHeroSlider();
+  </script>
+</body>
+</html>
+ 

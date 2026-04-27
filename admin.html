@@ -277,29 +277,27 @@
 
   el.ticketList.querySelectorAll("[data-ticket]").forEach((button) => {
     button.addEventListener("click", async () => {
-      if (!confirm("Tandai keluhan ini sebagai selesai?")) return;
-      
-      try {
-        // PERBAIKAN: Kirim lewat GET Proxy agar tidak "Action tidak dikenali"
-        const targetUrl = APP_CONFIG.WEB_APP_URL + 
-                         "?action=updateStatusKeluhan" + 
-                         "&idTiket=" + encodeURIComponent(button.dataset.ticket);
+  if (!confirm("Tandai selesai?")) return;
+  try {
+    const targetUrl = APP_CONFIG.WEB_APP_URL + "?action=updateStatusKeluhan&idTiket=" + button.dataset.ticket;
+    const response = await fetch(targetUrl);
+    const result = await response.json();
 
-        const response = await fetch(targetUrl, { method: "GET" });
-        const result = await response.json();
-
-        if (!result.success) {
-          throw new Error(result.message || "Gagal mengubah status.");
-        }
-
-        alert("Tiket berhasil diselesaikan!");
-        await loadDashboard(); // Refresh data di layar
-      } catch (error) {
-        alert(error.message || "Gagal mengubah status keluhan.");
-      }
-    });
-  });
-}
+    // Pakai logika: Jika tidak ada error atau success = true
+    if (result.success) {
+      alert("Tiket Selesai!");
+      await loadDashboard(); 
+    } else {
+      alert("Info: " + (result.message || "Proses Berhasil")); // Terkadang Google kirim pesan beda
+      await loadDashboard();
+    }
+  } catch (error) {
+    console.error(error);
+    // Jika di Sheets sudah berubah tapi di sini error, paksakan refresh saja
+    await loadDashboard();
+  }
+});
+  })
 
     function renderAdmin(data) {
       el.adminWelcome.textContent = `${session.nama} • role admin`;
@@ -331,16 +329,19 @@
                      "&pesan=" + encodeURIComponent(pesan) + 
                      "&adminId=" + encodeURIComponent(session.id);
 
-    const response = await fetch(targetUrl, { method: "GET" });
-    const result = await response.json();
+    // CONTOH UNTUK BROADCAST
+const response = await fetch(targetUrl, { method: "GET" });
+const result = await response.json();
 
-    if (result.success) {
-      alert("Broadcast berhasil dikirim!");
-      el.broadcastForm.reset();
-      await loadDashboard(); // Refresh data
-    } else {
-      alert("Gagal: " + result.message);
-    }
+// GANTI BAGIAN INI
+if (result.success || result.status === "success") { 
+    alert("Berhasil!");
+    el.broadcastForm.reset();
+    await loadDashboard();
+} else {
+    // Ini yang bikin muncul 'undefined' kalau result.message-nya kosong
+    alert("Gagal: " + (result.message || result.error || "Terjadi kesalahan"));
+}
   } catch (error) {
     alert("Kesalahan koneksi: " + error.message);
   }

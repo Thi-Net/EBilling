@@ -322,31 +322,31 @@
   const pesan = el.broadcastMessage.value.trim();
   if (!pesan) return;
 
+  if (!confirm("Kirim broadcast ke semua pelanggan?")) return;
+
   try {
-    // Sesuaikan parameter dengan yang diminta doGet (pesan & adminId)
     const targetUrl = APP_CONFIG.WEB_APP_URL + 
                      "?action=updateBroadcast" + 
                      "&pesan=" + encodeURIComponent(pesan) + 
                      "&adminId=" + encodeURIComponent(session.id);
 
-    // CONTOH UNTUK BROADCAST
-const response = await fetch(targetUrl, { method: "GET" });
-const result = await response.json();
+    const response = await fetch(targetUrl);
+    const result = await response.json();
 
-// GANTI BAGIAN INI
-if (result.success || result.status === "success") { 
-    alert("Berhasil!");
-    el.broadcastForm.reset();
-    await loadDashboard();
-} else {
-    // Ini yang bikin muncul 'undefined' kalau result.message-nya kosong
-    alert("Gagal: " + (result.message || result.error || "Terjadi kesalahan"));
-}
+    // Jika result ada isinya, kita anggap sukses atau cek property success
+    if (result && (result.success || result.status === "success" || !result.error)) {
+      alert("Siap! Broadcast berhasil disebarkan.");
+      el.broadcastForm.reset();
+      // Menggunakan reload agar data benar-benar segar
+      window.location.reload();
+    } else {
+      alert("Gagal mengirim: " + (result.message || "Respons tidak valid"));
+    }
   } catch (error) {
-    alert("Kesalahan koneksi: " + error.message);
+    console.error("Broadcast Error:", error);
+    alert("Kesalahan Sistem: " + error.message);
   }
 }
-
     function logout() {
       localStorage.removeItem("billing_session");
       window.location.href = "index.html";

@@ -308,14 +308,31 @@
       renderTickets(data.keluhan || []);
     }
 
-    async function loadDashboard() {
-      try {
-        const result = await fetchJson(buildUrl("dashboardAdmin", { id: session.id }));
-        renderAdmin(result.data);
-      } catch (error) {
-        alert(error.message || "Gagal memuat dashboard admin.");
-      }
+    // Ganti fungsi loadDashboard agar memanggil dashboardAdmin
+async function loadDashboard() {
+  try {
+    const response = await fetch(APP_CONFIG.WEB_APP_URL + "?action=dashboardAdmin");
+    const result = await response.json();
+    if (result.success) {
+      state.data = result.data;
+      renderStats();
+      renderTickets(result.data.complaints);
+      renderUsers(result.data.users);
     }
+  } catch (error) {
+    console.error("Gagal muat data admin");
+  }
+}
+
+// Ganti bagian Klik Tombol Selesai di renderTickets
+// Cari bagian: await postJson({...}) lalu ganti jadi:
+const targetUrl = APP_CONFIG.WEB_APP_URL + "?action=updateStatusKeluhan&idTiket=" + button.dataset.ticket;
+const response = await fetch(targetUrl);
+const result = await response.json();
+if (result.success || result.idTiket) {
+    alert("Tiket Selesai!");
+    await loadDashboard();
+}
 
     async function handleBroadcast(event) {
   event.preventDefault();

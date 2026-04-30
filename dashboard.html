@@ -321,18 +321,19 @@
     setFeedback(el.complaintFeedback, "Sedang mengirim...", "info");
 
     const targetUrl = APP_CONFIG.WEB_APP_URL + 
-                     "?action=kirimKeluhan" + 
-                     "&idPelanggan=" + encodeURIComponent(session.id) + 
-                     "&pesan=" + encodeURIComponent(pesan);
+                 "?action=kirimKeluhan" + 
+                 "&idPelanggan=" + encodeURIComponent(session.id) + 
+                 "&pesan=" + encodeURIComponent(pesan);
 
-    const response = await fetch(targetUrl);
-    const result = await response.json();
+const response = await fetch(targetUrl);
+const result = await response.json();
 
-    // Pengecekan lebih luas: success atau adanya idTiket dianggap berhasil
-    if (result.success || result.idTiket || result.status === "success") {
-      setFeedback(el.complaintFeedback, "Keluhan berhasil terkirim!", "success");
-      el.complaintForm.reset();
-      
+// Jika ada idTiket (balasan dari saveKeluhan_), anggap sukses
+if (result.idTiket || result.success) {
+  setFeedback(el.complaintFeedback, "Keluhan terkirim!", "success");
+  el.complaintForm.reset();
+  await loadDashboard(); 
+}
       // Buka WA Admin
       const waText = encodeURIComponent(`Halo Admin ThiNet, saya ${session.nama} lapor keluhan: ${pesan}`);
       window.open(`https://wa.me/${APP_CONFIG.WHATSAPP_ADMIN}?text=${waText}`, "_blank");

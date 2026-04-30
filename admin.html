@@ -22,57 +22,257 @@
       --shadow: 0 18px 42px rgba(15, 23, 42, 0.08);
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
       font-family: "Plus Jakarta Sans", sans-serif;
       color: var(--text);
-      background: radial-gradient(circle at top left, rgba(79, 70, 229, 0.08), transparent 26%), linear-gradient(180deg, #f8fbff 0%, #f3f6fb 100%);
+      background:
+        radial-gradient(circle at top left, rgba(79, 70, 229, 0.08), transparent 26%),
+        linear-gradient(180deg, #f8fbff 0%, #f3f6fb 100%);
     }
 
-    .container { width: min(1280px, calc(100% - 32px)); margin: 0 auto; }
-    .topbar { padding: 22px 0; }
-    .topbar-inner { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 18px 20px; border-radius: 24px; background: rgba(255, 255, 255, 0.92); border: 1px solid var(--line); box-shadow: var(--shadow); }
-    .button { border: 0; border-radius: 14px; padding: 12px 18px; font: inherit; font-weight: 700; cursor: pointer; }
-    .button-primary { color: #fff; background: linear-gradient(135deg, var(--indigo), #7c3aed); }
-    .button-secondary { background: var(--surface-soft); color: var(--text); }
-    .button-success { color: #fff; background: var(--green); }
-    .button-danger { color: #fff; background: var(--rose); }
-    .dashboard { display: grid; gap: 20px; padding-bottom: 36px; }
-    .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
-    .card { background: var(--surface); border-radius: 24px; border: 1px solid var(--line); box-shadow: var(--shadow); padding: 22px; }
-    .stat-card { background: linear-gradient(180deg, #fff, #f8fbff); }
-    .stat-card small { color: var(--muted); display: block; margin-bottom: 10px; }
-    .stat-card strong { font-size: 2rem; }
-    .grid-2 { display: grid; grid-template-columns: 1.25fr 0.75fr; gap: 20px; }
-    .table-wrap { overflow-x: auto; margin-top: 18px; }
-    table { width: 100%; border-collapse: collapse; min-width: 980px; }
-    th, td { padding: 12px 14px; border-bottom: 1px solid var(--line); text-align: left; font-size: 0.94rem; vertical-align: top; }
-    th { color: var(--muted); font-weight: 700; background: #f8fbff; }
-    .pill { display: inline-flex; align-items: center; padding: 8px 12px; border-radius: 999px; font-size: 0.85rem; font-weight: 700; }
-    .pill.active { color: #166534; background: #dcfce7; }
-    .pill.isolated { color: #92400e; background: #fef3c7; }
-    .pill.open { color: #991b1b; background: #fee2e2; }
-    .pill.done { color: #166534; background: #dcfce7; }
-    .muted { color: var(--muted); line-height: 1.7; }
-    .form-group { margin-bottom: 14px; }
-    .form-group label { display: block; margin-bottom: 8px; color: var(--muted); font-size: 0.92rem; }
-    .form-group textarea { width: 100%; min-height: 120px; padding: 14px 16px; border-radius: 14px; border: 1px solid var(--line); font: inherit; color: var(--text); resize: vertical; outline: none; }
-    .form-group textarea:focus { border-color: rgba(79, 70, 229, 0.6); box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12); }
-    .feedback { min-height: 24px; margin-top: 12px; font-size: 0.92rem; color: var(--muted); }
-    .feedback.success { color: var(--green); }
-    .feedback.error { color: var(--rose); }
-    .ticket-list { display: grid; gap: 14px; margin-top: 18px; }
-    .ticket { padding: 16px; border-radius: 18px; background: #f8fbff; border: 1px solid var(--line); }
-    .ticket-header { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; margin-bottom: 10px; }
-    .empty-state { color: var(--muted); line-height: 1.7; }
+    .container {
+      width: min(1280px, calc(100% - 32px));
+      margin: 0 auto;
+    }
 
-    @media (max-width: 1100px) { .grid-2 { grid-template-columns: 1fr; } }
+    .topbar {
+      padding: 22px 0;
+    }
+
+    .topbar-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 18px 20px;
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+    }
+
+    .button {
+      border: 0;
+      border-radius: 14px;
+      padding: 12px 18px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .button-primary {
+      color: #fff;
+      background: linear-gradient(135deg, var(--indigo), #7c3aed);
+    }
+
+    .button-secondary {
+      background: var(--surface-soft);
+      color: var(--text);
+    }
+
+    .button-success {
+      color: #fff;
+      background: var(--green);
+    }
+
+    .button-danger {
+      color: #fff;
+      background: var(--rose);
+    }
+
+    .dashboard {
+      display: grid;
+      gap: 20px;
+      padding-bottom: 36px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--surface);
+      border-radius: 24px;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    .stat-card {
+      background: linear-gradient(180deg, #fff, #f8fbff);
+    }
+
+    .stat-card small {
+      color: var(--muted);
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    .stat-card strong {
+      font-size: 2rem;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1.25fr 0.75fr;
+      gap: 20px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      margin-top: 18px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 980px;
+    }
+
+    th,
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      font-size: 0.94rem;
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 700;
+      background: #f8fbff;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .pill.active {
+      color: #166534;
+      background: #dcfce7;
+    }
+
+    .pill.isolated {
+      color: #92400e;
+      background: #fef3c7;
+    }
+
+    .pill.open {
+      color: #991b1b;
+      background: #fee2e2;
+    }
+
+    .pill.done {
+      color: #166534;
+      background: #dcfce7;
+    }
+
+    .muted {
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .form-group textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      font: inherit;
+      color: var(--text);
+      resize: vertical;
+      outline: none;
+    }
+
+    .form-group textarea:focus {
+      border-color: rgba(79, 70, 229, 0.6);
+      box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
+    }
+
+    .feedback {
+      min-height: 24px;
+      margin-top: 12px;
+      font-size: 0.92rem;
+      color: var(--muted);
+    }
+
+    .feedback.success {
+      color: var(--green);
+    }
+
+    .feedback.error {
+      color: var(--rose);
+    }
+
+    .ticket-list {
+      display: grid;
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .ticket {
+      padding: 16px;
+      border-radius: 18px;
+      background: #f8fbff;
+      border: 1px solid var(--line);
+    }
+
+    .ticket-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .empty-state {
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    @media (max-width: 1100px) {
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+
     @media (max-width: 780px) {
-      .container { width: min(100% - 20px, 1280px); }
-      .stats { grid-template-columns: 1fr; }
-      .topbar-inner { flex-direction: column; align-items: flex-start; }
+      .container {
+        width: min(100% - 20px, 1280px);
+      }
+
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar-inner {
+        flex-direction: column;
+        align-items: flex-start;
+      }
     }
   </style>
 </head>
@@ -150,7 +350,6 @@
   </main>
 
   <script>
-    // 1. GUNAKAN JALUR PROXY RAHASIA
     const APP_CONFIG = {
       WEB_APP_URL: "/api/proxy"
     };
@@ -193,13 +392,13 @@
       }).format(date);
     }
 
-    // 2. PERBAIKAN: Fungsi buildUrl tidak menggunakan 'new URL'
     function buildUrl(action, params = {}) {
-      let url = APP_CONFIG.WEB_APP_URL + "?action=" + action;
+      const url = new URL(APP_CONFIG.WEB_APP_URL);
+      url.searchParams.set("action", action);
       Object.entries(params).forEach(([key, value]) => {
-        url += "&" + key + "=" + encodeURIComponent(value);
+        url.searchParams.set(key, value);
       });
-      return url;
+      return url.toString();
     }
 
     async function fetchJson(url) {
@@ -211,12 +410,14 @@
       return result;
     }
 
-    // 3. PERBAIKAN: postJson juga diarahkan ke Proxy
     async function postJson(payload) {
-      // Kita kirim lewat GET saja karena proxy kita didesain untuk GET agar simpel
-      const params = new URLSearchParams(payload).toString();
-      const response = await fetch(APP_CONFIG.WEB_APP_URL + "?" + params, { method: "GET" });
-      
+      const response = await fetch(APP_CONFIG.WEB_APP_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "text/plain;charset=utf-8"
+        },
+        body: JSON.stringify(payload)
+      });
       const result = await response.json();
       if (!result.success) {
         throw new Error(result.message || "Permintaan gagal.");
@@ -253,51 +454,42 @@
     }
 
     function renderTickets(tickets) {
-  if (!tickets.length) {
-    el.ticketList.innerHTML = '<div class="empty-state">Belum ada tiket keluhan.</div>';
-    return;
-  }
+      if (!tickets.length) {
+        el.ticketList.innerHTML = '<div class="empty-state">Belum ada tiket keluhan.</div>';
+        return;
+      }
 
-  el.ticketList.innerHTML = tickets.map((ticket) => {
-    const done = String(ticket.status || "").toUpperCase() === "SELESAI";
-    return `
-      <article class="ticket">
-        <div class="ticket-header">
-          <div>
-            <strong>${ticket.idTiket}</strong>
-            <div class="muted">${ticket.nama} • ${ticket.idPelanggan} • ${formatDate(ticket.tgl)}</div>
-          </div>
-          <span class="pill ${done ? "done" : "open"}">${ticket.status}</span>
-        </div>
-        <p style="margin:0 0 14px;line-height:1.7;">${ticket.pesan}</p>
-        ${done ? "" : `<button class="button button-success" type="button" data-ticket="${ticket.idTiket}">Selesai</button>`}
-      </article>
-    `;
-  }).join("");
+      el.ticketList.innerHTML = tickets.map((ticket) => {
+        const done = String(ticket.status || "").toUpperCase() === "SELESAI";
+        return `
+          <article class="ticket">
+            <div class="ticket-header">
+              <div>
+                <strong>${ticket.idTiket}</strong>
+                <div class="muted">${ticket.nama} • ${ticket.idPelanggan} • ${formatDate(ticket.tgl)}</div>
+              </div>
+              <span class="pill ${done ? "done" : "open"}">${ticket.status}</span>
+            </div>
+            <p style="margin:0 0 14px;line-height:1.7;">${ticket.pesan}</p>
+            ${done ? "" : `<button class="button button-success" type="button" data-ticket="${ticket.idTiket}">Selesai</button>`}
+          </article>
+        `;
+      }).join("");
 
-  el.ticketList.querySelectorAll("[data-ticket]").forEach((button) => {
-    button.addEventListener("click", async () => {
-  if (!confirm("Tandai selesai?")) return;
-  try {
-    const targetUrl = APP_CONFIG.WEB_APP_URL + "?action=updateStatusKeluhan&idTiket=" + button.dataset.ticket;
-    const response = await fetch(targetUrl);
-    const result = await response.json();
-
-    // Pakai logika: Jika tidak ada error atau success = true
-    if (result.success) {
-      alert("Tiket Selesai!");
-      await loadDashboard(); 
-    } else {
-      alert("Info: " + (result.message || "Proses Berhasil")); // Terkadang Google kirim pesan beda
-      await loadDashboard();
+      el.ticketList.querySelectorAll("[data-ticket]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          try {
+            await postJson({
+              action: "updateStatusKeluhan",
+              idTiket: button.dataset.ticket
+            });
+            await loadDashboard();
+          } catch (error) {
+            alert(error.message || "Gagal mengubah status keluhan.");
+          }
+        });
+      });
     }
-  } catch (error) {
-    console.error(error);
-    // Jika di Sheets sudah berubah tapi di sini error, paksakan refresh saja
-    await loadDashboard();
-  }
-});
-  })
 
     function renderAdmin(data) {
       el.adminWelcome.textContent = `${session.nama} • role admin`;
@@ -308,62 +500,43 @@
       renderTickets(data.keluhan || []);
     }
 
-    // Ganti fungsi loadDashboard agar memanggil dashboardAdmin
-async function loadDashboard() {
-  try {
-    const response = await fetch(APP_CONFIG.WEB_APP_URL + "?action=dashboardAdmin");
-    const result = await response.json();
-    if (result.success) {
-      state.data = result.data;
-      renderStats();
-      renderTickets(result.data.complaints);
-      renderUsers(result.data.users);
-    }
-  } catch (error) {
-    console.error("Gagal muat data admin");
-  }
-}
+    async function loadDashboard() {
+      if (!APP_CONFIG.WEB_APP_URL || APP_CONFIG.WEB_APP_URL.includes("REPLACE_WITH")) {
+        alert("Isi WEB_APP_URL di admin.html terlebih dulu.");
+        return;
+      }
 
-// Ganti bagian Klik Tombol Selesai di renderTickets
-// Cari bagian: await postJson({...}) lalu ganti jadi:
-const targetUrl = APP_CONFIG.WEB_APP_URL + "?action=updateStatusKeluhan&idTiket=" + button.dataset.ticket;
-const response = await fetch(targetUrl);
-const result = await response.json();
-if (result.success || result.idTiket) {
-    alert("Tiket Selesai!");
-    await loadDashboard();
-}
+      try {
+        const result = await fetchJson(buildUrl("dashboardAdmin", { id: session.id }));
+        renderAdmin(result.data);
+      } catch (error) {
+        alert(error.message || "Gagal memuat dashboard admin.");
+      }
+    }
 
     async function handleBroadcast(event) {
-  event.preventDefault();
-  const pesan = el.broadcastMessage.value.trim();
-  if (!pesan) return;
+      event.preventDefault();
+      const pesan = el.broadcastMessage.value.trim();
 
-  if (!confirm("Kirim broadcast ke semua pelanggan?")) return;
+      if (!pesan) {
+        setFeedback("Pesan broadcast wajib diisi.", "error");
+        return;
+      }
 
-  try {
-    const targetUrl = APP_CONFIG.WEB_APP_URL + 
-                     "?action=updateBroadcast" + 
-                     "&pesan=" + encodeURIComponent(pesan) + 
-                     "&adminId=" + encodeURIComponent(session.id);
-
-    const response = await fetch(targetUrl);
-    const result = await response.json();
-
-    // Jika result ada isinya, kita anggap sukses atau cek property success
-    if (result && (result.success || result.status === "success" || !result.error)) {
-      alert("Siap! Broadcast berhasil disebarkan.");
-      el.broadcastForm.reset();
-      // Menggunakan reload agar data benar-benar segar
-      window.location.reload();
-    } else {
-      alert("Gagal mengirim: " + (result.message || "Respons tidak valid"));
+      try {
+        await postJson({
+          action: "updateBroadcast",
+          pesan: pesan,
+          adminId: session.id
+        });
+        setFeedback("Broadcast berhasil diperbarui.", "success");
+        el.broadcastForm.reset();
+        await loadDashboard();
+      } catch (error) {
+        setFeedback(error.message || "Gagal menyimpan broadcast.", "error");
+      }
     }
-  } catch (error) {
-    console.error("Broadcast Error:", error);
-    alert("Kesalahan Sistem: " + error.message);
-  }
-}
+
     function logout() {
       localStorage.removeItem("billing_session");
       window.location.href = "index.html";
@@ -377,3 +550,4 @@ if (result.success || result.idTiket) {
   </script>
 </body>
 </html>
+ 

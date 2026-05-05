@@ -260,7 +260,7 @@
       }
     }
 
-    @media (max-width: 780px) {
+    @media (max-width: 768px) {
       .container {
         width: min(100% - 20px, 1280px);
       }
@@ -272,6 +272,25 @@
       .topbar-inner {
         flex-direction: column;
         align-items: flex-start;
+      }
+
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+
+      .button {
+        width: 100%;
+      }
+
+      .card,
+      .topbar-inner {
+        padding: 18px;
+      }
+
+      body,
+      .muted,
+      .feedback {
+        font-size: 0.94rem;
       }
     }
   </style>
@@ -331,12 +350,13 @@
 
       <aside class="card">
         <h2>Broadcast Informasi</h2>
+        <p class="muted">Pesan akan disimpan ke sheet `Data_Informasi` dan muncul di dashboard pelanggan.</p>
         <form id="broadcastForm">
           <div class="form-group">
-            <label for="broadcastMessage">Masukkan Pesan</label>
+            <label for="broadcastMessage">Pesan Broadcast</label>
             <textarea id="broadcastMessage" placeholder="Contoh: Maintenance jaringan malam ini pukul 23.00 sampai 01.00 WIB." required></textarea>
           </div>
-          <button class="button button-primary" type="submit">Kirim Broadcast</button>
+          <button class="button button-primary" type="submit">Simpan Broadcast</button>
           <div id="broadcastFeedback" class="feedback"></div>
         </form>
       </aside>
@@ -350,9 +370,7 @@
   </main>
 
   <script>
-    const APP_CONFIG = {
-      WEB_APP_URL: "/api/proxy"
-    };
+    const API_ENDPOINT = "/api/proxy";
 
     const session = JSON.parse(localStorage.getItem("billing_session") || "null");
     if (!session || session.role !== "admin") {
@@ -393,7 +411,7 @@
     }
 
     function buildUrl(action, params = {}) {
-      const url = new URL(APP_CONFIG.WEB_APP_URL);
+      const url = new URL(API_ENDPOINT, window.location.origin);
       url.searchParams.set("action", action);
       Object.entries(params).forEach(([key, value]) => {
         url.searchParams.set(key, value);
@@ -411,10 +429,10 @@
     }
 
     async function postJson(payload) {
-      const response = await fetch(APP_CONFIG.WEB_APP_URL, {
+      const response = await fetch(API_ENDPOINT, {
         method: "POST",
         headers: {
-          "Content-Type": "text/plain;charset=utf-8"
+          "Content-Type": "application/json"
         },
         body: JSON.stringify(payload)
       });
@@ -501,11 +519,6 @@
     }
 
     async function loadDashboard() {
-      if (!APP_CONFIG.WEB_APP_URL || APP_CONFIG.WEB_APP_URL.includes("REPLACE_WITH")) {
-        alert("Isi WEB_APP_URL di admin.html terlebih dulu.");
-        return;
-      }
-
       try {
         const result = await fetchJson(buildUrl("dashboardAdmin", { id: session.id }));
         renderAdmin(result.data);
@@ -550,4 +563,3 @@
   </script>
 </body>
 </html>
- 

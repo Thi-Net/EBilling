@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard Pelanggan | Billing ThiNet</title>
+  <title>Dashboard Pelanggan | Billing RTRW NET</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="Mid-client-LjrqmQCS3rzNpt_B"></script>
+  <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="YOUR_CLIENT_KEY"></script>
   <style>
     :root {
       --bg: #f4f7fb;
@@ -273,18 +273,33 @@
       }
     }
 
-    @media (max-width: 640px) {
+    @media (max-width: 768px) {
       .container {
         width: min(100% - 20px, 1180px);
+      }
+
+      .topbar-inner {
+        flex-direction: column;
+        align-items: flex-start;
       }
 
       .metric-grid {
         grid-template-columns: 1fr;
       }
 
+      .button {
+        width: 100%;
+      }
+
+      .card,
       .topbar-inner {
-        flex-direction: column;
-        align-items: flex-start;
+        padding: 18px;
+      }
+
+      body,
+      .muted,
+      .feedback {
+        font-size: 0.94rem;
       }
     }
   </style>
@@ -304,8 +319,8 @@
     <section class="stack">
       <article class="card hero">
         <div>
-          <h1>Layanan Internet Anda</h1>
-          <p id="heroMessage">Memuat data pelanggan...</p>
+          <h1>Tagihan internet Anda</h1>
+          <p id="heroMessage">Data billing sedang diambil dari server Google Apps Script.</p>
           <div id="systemStatus" class="status-pill">Memuat status...</div>
         </div>
         <div class="actions">
@@ -322,7 +337,7 @@
             <strong id="paketValue">-</strong>
           </div>
           <div class="metric">
-            <small>Tagihan</small>
+            <small>Harga</small>
             <strong id="hargaValue">-</strong>
           </div>
           <div class="metric">
@@ -375,9 +390,9 @@
 
   <script>
     const APP_CONFIG = {
-      WEB_APP_URL: "/api/proxy",
       WHATSAPP_ADMIN: "6281234567890"
     };
+    const API_ENDPOINT = "/api/proxy";
 
     const session = JSON.parse(localStorage.getItem("billing_session") || "null");
     if (!session || session.role !== "client") {
@@ -435,7 +450,7 @@
     }
 
     function buildUrl(action, params = {}) {
-      const url = new URL(APP_CONFIG.WEB_APP_URL);
+      const url = new URL(API_ENDPOINT, window.location.origin);
       url.searchParams.set("action", action);
       Object.entries(params).forEach(([key, value]) => {
         url.searchParams.set(key, value);
@@ -453,10 +468,10 @@
     }
 
     async function postJson(payload) {
-      const response = await fetch(APP_CONFIG.WEB_APP_URL, {
+      const response = await fetch(API_ENDPOINT, {
         method: "POST",
         headers: {
-          "Content-Type": "text/plain;charset=utf-8"
+          "Content-Type": "application/json"
         },
         body: JSON.stringify(payload)
       });
@@ -523,11 +538,6 @@
     }
 
     async function loadDashboard() {
-      if (!APP_CONFIG.WEB_APP_URL || APP_CONFIG.WEB_APP_URL.includes("REPLACE_WITH")) {
-        alert("Isi WEB_APP_URL di dashboard.html terlebih dulu.");
-        return;
-      }
-
       try {
         const result = await fetchJson(buildUrl("dashboardClient", { id: session.id }));
         renderDashboard(result.data);
@@ -613,4 +623,3 @@
   </script>
 </body>
 </html>
- 

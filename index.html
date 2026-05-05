@@ -3,27 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard Admin | Billing RTRW NET</title>
+  <title>Billing RTRW NET</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #f3f6fb;
-      --surface: #ffffff;
-      --surface-soft: #eef2ff;
-      --text: #0f172a;
-      --muted: #64748b;
-      --line: #dbe4f0;
-      --indigo: #4f46e5;
-      --rose: #e11d48;
-      --green: #16a34a;
-      --amber: #d97706;
-      --shadow: 0 18px 42px rgba(15, 23, 42, 0.08);
+      --bg: #08111f;
+      --bg-soft: rgba(255, 255, 255, 0.06);
+      --panel: rgba(15, 23, 42, 0.72);
+      --line: rgba(255, 255, 255, 0.12);
+      --text: #edf2ff;
+      --muted: #b8c3e0;
+      --indigo: #6366f1;
+      --rose: #f43f5e;
+      --lime: #22c55e;
+      --warning: #f59e0b;
+      --shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
     }
 
     * {
       box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
     }
 
     body {
@@ -31,162 +35,289 @@
       font-family: "Plus Jakarta Sans", sans-serif;
       color: var(--text);
       background:
-        radial-gradient(circle at top left, rgba(79, 70, 229, 0.08), transparent 26%),
-        linear-gradient(180deg, #f8fbff 0%, #f3f6fb 100%);
+        radial-gradient(circle at top left, rgba(99, 102, 241, 0.22), transparent 28%),
+        radial-gradient(circle at top right, rgba(244, 63, 94, 0.2), transparent 30%),
+        linear-gradient(160deg, #040816 0%, #0b1324 45%, #111827 100%);
+      min-height: 100vh;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
     }
 
     .container {
-      width: min(1280px, calc(100% - 32px));
+      width: min(1180px, calc(100% - 32px));
       margin: 0 auto;
     }
 
-    .topbar {
-      padding: 22px 0;
+    .navbar-wrap {
+      position: sticky;
+      top: 16px;
+      z-index: 50;
+      padding-top: 16px;
     }
 
-    .topbar-inner {
+    .navbar {
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      justify-content: space-between;
       gap: 16px;
-      padding: 18px 20px;
-      border-radius: 24px;
-      background: rgba(255, 255, 255, 0.92);
+      padding: 14px 18px;
       border: 1px solid var(--line);
+      border-radius: 24px;
+      background: rgba(7, 11, 24, 0.56);
+      backdrop-filter: blur(16px);
       box-shadow: var(--shadow);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+
+    .brand img {
+      height: 40px;
+      width: auto;
+      object-fit: contain;
+      border-radius: 10px;
+    }
+
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--indigo), var(--rose));
+      box-shadow: 0 10px 24px rgba(99, 102, 241, 0.35);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 0.95rem;
+      align-items: center;
+    }
+
+    .nav-links a:hover {
+      color: var(--text);
+    }
+
+    .nav-login {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 16px;
+      border-radius: 999px;
+      color: #fff;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--indigo), var(--rose));
+      box-shadow: 0 12px 24px rgba(99, 102, 241, 0.22);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 28px;
+      align-items: start;
+      padding: 72px 0 44px;
+    }
+
+    .hero-copy h1 {
+      margin: 0 0 16px;
+      font-size: clamp(2.3rem, 4vw, 4.5rem);
+      line-height: 1.02;
+    }
+
+    .hero-copy p {
+      margin: 0 0 26px;
+      color: var(--muted);
+      font-size: 1.02rem;
+      line-height: 1.8;
+      max-width: 60ch;
+    }
+
+    .hero-badges,
+    .mini-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .badge,
+    .chip {
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+      font-size: 0.92rem;
+    }
+
+    #heroSliderBadge {
+      padding: 14px 22px;
+      font-size: 1.08rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin: 32px 0 28px;
+      min-height: 56px;
+      align-items: flex-end;
+    }
+
+    .hero-slider-content {
+      min-height: 520px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .hero-visual {
+      margin-top: 10px;
+      padding: 22px;
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.05);
+      min-height: 320px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hero-visual svg {
+      width: 100%;
+      height: auto;
+      display: block;
     }
 
     .button {
       border: 0;
-      border-radius: 14px;
-      padding: 12px 18px;
+      border-radius: 16px;
+      padding: 14px 20px;
       font: inherit;
       font-weight: 700;
       cursor: pointer;
+      transition: transform 0.18s ease, opacity 0.18s ease;
+    }
+
+    .button:hover {
+      transform: translateY(-1px);
     }
 
     .button-primary {
       color: #fff;
-      background: linear-gradient(135deg, var(--indigo), #7c3aed);
+      background: linear-gradient(135deg, var(--indigo), var(--rose));
+      box-shadow: 0 14px 30px rgba(99, 102, 241, 0.25);
     }
 
     .button-secondary {
-      background: var(--surface-soft);
       color: var(--text);
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
     }
 
-    .button-success {
-      color: #fff;
-      background: var(--green);
-    }
-
-    .button-danger {
-      color: #fff;
-      background: var(--rose);
-    }
-
-    .dashboard {
-      display: grid;
-      gap: 20px;
-      padding-bottom: 36px;
-    }
-
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 18px;
-    }
-
-    .card {
-      background: var(--surface);
-      border-radius: 24px;
+    .glass-card,
+    .section-card,
+    .login-card {
       border: 1px solid var(--line);
+      border-radius: 28px;
+      background: var(--panel);
+      backdrop-filter: blur(20px);
       box-shadow: var(--shadow);
-      padding: 22px;
     }
 
-    .stat-card {
-      background: linear-gradient(180deg, #fff, #f8fbff);
+    section {
+      padding: 28px 0;
     }
 
-    .stat-card small {
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .section-head h2 {
+      margin: 0 0 8px;
+      font-size: clamp(1.5rem, 2vw, 2.3rem);
+    }
+
+    .section-head p {
+      margin: 0;
       color: var(--muted);
-      display: block;
-      margin-bottom: 10px;
-    }
-
-    .stat-card strong {
-      font-size: 2rem;
-    }
-
-    .grid-2 {
-      display: grid;
-      grid-template-columns: 1.25fr 0.75fr;
-      gap: 20px;
-    }
-
-    .table-wrap {
-      overflow-x: auto;
-      margin-top: 18px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 980px;
-    }
-
-    th,
-    td {
-      padding: 12px 14px;
-      border-bottom: 1px solid var(--line);
-      text-align: left;
-      font-size: 0.94rem;
-      vertical-align: top;
-    }
-
-    th {
-      color: var(--muted);
-      font-weight: 700;
-      background: #f8fbff;
-    }
-
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      padding: 8px 12px;
-      border-radius: 999px;
-      font-size: 0.85rem;
-      font-weight: 700;
-    }
-
-    .pill.active {
-      color: #166534;
-      background: #dcfce7;
-    }
-
-    .pill.isolated {
-      color: #92400e;
-      background: #fef3c7;
-    }
-
-    .pill.open {
-      color: #991b1b;
-      background: #fee2e2;
-    }
-
-    .pill.done {
-      color: #166534;
-      background: #dcfce7;
-    }
-
-    .muted {
-      color: var(--muted);
+      max-width: 62ch;
       line-height: 1.7;
     }
 
+    .package-grid,
+    .feature-grid,
+    .utility-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .package-card,
+    .feature-card,
+    .utility-card {
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .package-card.highlight {
+      border-color: rgba(99, 102, 241, 0.4);
+      background:
+        linear-gradient(180deg, rgba(99, 102, 241, 0.14), rgba(255, 255, 255, 0.04)),
+        var(--panel);
+    }
+
+    .package-card .price {
+      margin: 16px 0;
+      font-size: 2.4rem;
+      font-weight: 800;
+    }
+
+    .package-card ul,
+    .feature-card ul {
+      padding-left: 18px;
+      color: var(--muted);
+      line-height: 1.8;
+    }
+
+    .login-section {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      padding-bottom: 70px;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    .login-card,
+    .section-card {
+      padding: 24px;
+    }
+
+    .login-card h3,
+    .section-card h3 {
+      margin-top: 0;
+      font-size: 1.4rem;
+    }
+
     .form-group {
-      margin-bottom: 14px;
+      margin-bottom: 16px;
     }
 
     .form-group label {
@@ -196,370 +327,452 @@
       font-size: 0.92rem;
     }
 
-    .form-group textarea {
+    .form-group input {
       width: 100%;
-      min-height: 120px;
       padding: 14px 16px;
       border-radius: 14px;
-      border: 1px solid var(--line);
-      font: inherit;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.06);
       color: var(--text);
-      resize: vertical;
+      font: inherit;
       outline: none;
     }
 
-    .form-group textarea:focus {
-      border-color: rgba(79, 70, 229, 0.6);
-      box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
+    .form-group input:focus {
+      border-color: rgba(99, 102, 241, 0.7);
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.16);
     }
 
-    .feedback {
-      min-height: 24px;
-      margin-top: 12px;
+    .helper-text,
+    .status {
+      color: var(--muted);
       font-size: 0.92rem;
-      color: var(--muted);
-    }
-
-    .feedback.success {
-      color: var(--green);
-    }
-
-    .feedback.error {
-      color: var(--rose);
-    }
-
-    .ticket-list {
-      display: grid;
-      gap: 14px;
-      margin-top: 18px;
-    }
-
-    .ticket {
-      padding: 16px;
-      border-radius: 18px;
-      background: #f8fbff;
-      border: 1px solid var(--line);
-    }
-
-    .ticket-header {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      align-items: flex-start;
-      margin-bottom: 10px;
-    }
-
-    .empty-state {
-      color: var(--muted);
       line-height: 1.7;
     }
 
-    @media (max-width: 1100px) {
-      .grid-2 {
+    .status {
+      min-height: 24px;
+      margin-top: 12px;
+    }
+
+    .status.error {
+      color: #fecaca;
+    }
+
+    .status.success {
+      color: #bbf7d0;
+    }
+
+    footer {
+      padding: 16px 0 40px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    @media (max-width: 980px) {
+      .hero,
+      .login-section,
+      .package-grid,
+      .feature-grid,
+      .utility-grid {
         grid-template-columns: 1fr;
       }
     }
 
     @media (max-width: 768px) {
       .container {
-        width: min(100% - 20px, 1280px);
+        width: min(100% - 20px, 1180px);
       }
 
-      .stats {
-        grid-template-columns: 1fr;
-      }
-
-      .topbar-inner {
-        flex-direction: column;
+      .navbar {
         align-items: flex-start;
+        flex-direction: column;
+        padding: 12px 14px;
       }
 
-      .grid-2 {
-        grid-template-columns: 1fr;
+      .nav-links {
+        width: 100%;
+        gap: 10px 14px;
       }
 
+      .nav-login,
       .button {
         width: 100%;
       }
 
-      .card,
-      .topbar-inner {
+      .hero {
+        grid-template-columns: 1fr;
+        padding-top: 42px;
+      }
+
+      .hero-copy h1 {
+        font-size: clamp(1.9rem, 8vw, 3rem);
+      }
+
+      .hero-copy p,
+      .helper-text,
+      .status {
+        font-size: 0.88rem;
+      }
+
+      .hero-slider-content {
+        min-height: auto;
+      }
+
+      .hero-visual {
+        min-height: 240px;
+        padding: 16px;
+      }
+
+      .login-card {
+        width: 100%;
         padding: 18px;
       }
 
-      body,
-      .muted,
-      .feedback {
-        font-size: 0.94rem;
+      .hero-actions,
+      .hero-badges {
+        flex-direction: column;
       }
     }
   </style>
 </head>
 <body>
-  <div class="container topbar">
-    <div class="topbar-inner">
-      <div>
-        <strong style="display:block;font-size:1.1rem;">Dashboard Admin Billing RTRW NET</strong>
-        <span id="adminWelcome" class="muted">Memuat data admin...</span>
+  <div class="container navbar-wrap">
+    <nav class="navbar">
+      <div class="brand">
+        <img src="logo.jpg" alt="Logo RTRW NET">
+        <div>
+          <div>Billing RTRW NET</div>
+          <small style="color: var(--muted); font-weight: 600;">Mini ISP Web Billing</small>
+        </div>
       </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <button class="button button-secondary" id="refreshButton" type="button">Refresh</button>
-        <button class="button button-danger" id="logoutButton" type="button">Logout</button>
+      <div class="nav-links">
+        <a class="nav-login" href="#login">Login</a>
+        <a href="#home">Home</a>
+        <a href="#paket">Paket</a>
+        <a href="#fitur">Fitur</a>
+        <a href="#android">Android</a>
+        <a href="#pembayaran">Pembayaran</a>
       </div>
-    </div>
+    </nav>
   </div>
 
-  <main class="container dashboard">
-    <section class="stats">
-      <article class="card stat-card">
-        <small>Total Pelanggan</small>
-        <strong id="totalPelangganValue">0</strong>
-      </article>
-      <article class="card stat-card">
-        <small>Pelanggan Aktif</small>
-        <strong id="totalAktifValue">0</strong>
-      </article>
-      <article class="card stat-card">
-        <small>Pelanggan Terisolir</small>
-        <strong id="totalIsolirValue">0</strong>
-      </article>
-    </section>
-
-    <section class="grid-2">
-      <article class="card">
-        <h2>Data Pelanggan</h2>
-        <p class="muted">Tabel ini mengambil semua data dari sheet `Data_Pelanggan`.</p>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Nama</th>
-                <th>Paket</th>
-                <th>Harga</th>
-                <th>Status Sistem</th>
-                <th>Jatuh Tempo</th>
-                <th>Status Bayar</th>
-                <th>WhatsApp</th>
-              </tr>
-            </thead>
-            <tbody id="customerTableBody"></tbody>
-          </table>
+  <main class="container">
+    <section class="hero" id="home">
+      <div class="hero-copy">
+        <div class="hero-badges">
+          <div id="heroSliderBadge" class="badge"></div>
         </div>
-      </article>
-
-      <aside class="card">
-        <h2>Broadcast Informasi</h2>
-        <p class="muted">Pesan akan disimpan ke sheet `Data_Informasi` dan muncul di dashboard pelanggan.</p>
-        <form id="broadcastForm">
-          <div class="form-group">
-            <label for="broadcastMessage">Pesan Broadcast</label>
-            <textarea id="broadcastMessage" placeholder="Contoh: Maintenance jaringan malam ini pukul 23.00 sampai 01.00 WIB." required></textarea>
+        <div class="hero-slider-content">
+          <h1 id="heroTitle" style="display: none;">Internet Stabil untuk Rumah &amp; Usaha Anda</h1>
+          <div id="heroVisual" class="hero-visual"></div>
+          <p id="heroDescription">
+            Nikmati koneksi internet yang stabil untuk kebutuhan rumah, kerja, belajar, hingga usaha harian.
+            Didukung teknisi lokal yang cepat respon, harga transparan tanpa biaya membingungkan, dan paket yang cocok untuk keluarga maupun UMKM.
+          </p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="https://wa.me/6281234567890?text=Halo%20admin%2C%20saya%20ingin%20pasang%20internet" target="_blank" rel="noopener">Daftar Sekarang</a>
           </div>
-          <button class="button button-primary" type="submit">Simpan Broadcast</button>
-          <div id="broadcastFeedback" class="feedback"></div>
+        </div>
+        <div class="mini-grid">
+          <span class="chip">Auto isolir saat lewat jatuh tempo</span>
+          <span class="chip">Broadcast info ke semua pelanggan</span>
+          <span class="chip">Keluhan masuk ke dashboard admin</span>
+        </div>
+      </div>
+
+      <article class="login-card" id="login">
+        <h3>Login Panel</h3>
+        <p class="helper-text">Masukkan ID pelanggan atau akun admin. Session akan disimpan di `localStorage` setelah login berhasil.</p>
+        <form id="loginForm">
+          <div class="form-group">
+            <label for="userId">ID Pelanggan / Username Admin</label>
+            <input id="userId" name="userId" type="text" placeholder="Contoh: CUST001 atau admin" required>
+          </div>
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" placeholder="Masukkan password" required>
+          </div>
+          <button class="button button-primary" type="submit" style="width: 100%;">Masuk ke Sistem</button>
+          <div id="loginStatus" class="status"></div>
         </form>
-      </aside>
+      </article>
     </section>
 
-    <section class="card">
-      <h2>Keluhan Pelanggan</h2>
-      <p class="muted">Admin bisa menandai tiket sebagai selesai setelah gangguan ditangani.</p>
-      <div id="ticketList" class="ticket-list"></div>
+    <section id="paket">
+      <div class="section-head">
+        <div>
+          <h2>Pilih paket sesuai kebutuhan warga</h2>
+          <p>Paket dibuat simpel supaya mudah dijelaskan ke calon pelanggan dan mudah ditagihkan setiap bulan.</p>
+        </div>
+      </div>
+      <div class="package-grid">
+        <article class="glass-card package-card">
+          <span class="chip">Paket Hemat</span>
+          <h3>Paket Cermat</h3>
+          <div class="price">Rp100.000</div>
+          <ul>
+            <li>Untuk browsing, belajar, dan streaming ringan</li>
+            <li>Tagihan bulanan tetap</li>
+            <li>Cocok untuk rumah tangga kecil</li>
+          </ul>
+        </article>
+        <article class="glass-card package-card highlight">
+          <span class="chip" style="background: rgba(244, 63, 94, 0.18);">Paling Laris</span>
+          <h3>Paket Ngebut</h3>
+          <div class="price">Rp200.000</div>
+          <ul>
+            <li>Untuk streaming, meeting, CCTV, dan multi-device</li>
+            <li>Prioritas untuk keluarga aktif internet</li>
+            <li>Highlight di halaman landing untuk dorong upgrade</li>
+          </ul>
+        </article>
+      </div>
     </section>
+
+    <section id="fitur">
+      <div class="section-head">
+        <div>
+          <h2>Fitur inti yang benar-benar dipakai</h2>
+          <p>Sistem ini difokuskan ke kebutuhan operasional mini ISP: data pelanggan, pembayaran, keluhan, dan kontrol status layanan.</p>
+        </div>
+      </div>
+      <div class="feature-grid">
+        <article class="glass-card feature-card">
+          <h3>Billing Otomatis</h3>
+          <ul>
+            <li>Jatuh tempo mengikuti tanggal pasang</li>
+            <li>Reset status pembayaran tiap awal bulan</li>
+            <li>Auto isolir pelanggan yang lewat jatuh tempo</li>
+          </ul>
+        </article>
+        <article class="glass-card feature-card">
+          <h3>Pembayaran QRIS Midtrans</h3>
+          <ul>
+            <li>Generate invoice Snap dengan order ID berisi ID pelanggan</li>
+            <li>Webhook otomatis mengubah status menjadi lunas</li>
+            <li>Log pembayaran tersimpan ke sheet</li>
+          </ul>
+        </article>
+        <article class="glass-card feature-card">
+          <h3>Dashboard Pelanggan</h3>
+          <ul>
+            <li>Lihat tagihan, jatuh tempo, dan status sistem</li>
+            <li>Kirim keluhan dan lanjut chat WhatsApp</li>
+            <li>Akses broadcast info dari admin</li>
+          </ul>
+        </article>
+        <article class="glass-card feature-card">
+          <h3>Dashboard Admin</h3>
+          <ul>
+            <li>Statistik total pelanggan, aktif, dan terisolir</li>
+            <li>Kelola broadcast dan tiket keluhan</li>
+            <li>Monitoring daftar pelanggan lengkap</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section id="android">
+      <div class="section-head">
+        <div>
+          <h2>Akses ringan dari Android</h2>
+          <p>Frontend dibuat tanpa framework agar cepat dimuat di browser Android dan mudah di-host di mana saja.</p>
+        </div>
+      </div>
+      <div class="utility-grid">
+        <article class="glass-card utility-card">
+          <h3>Mobile Friendly</h3>
+          <p class="helper-text">Semua halaman responsif, ringan, dan bisa dipakai sebagai web app internal untuk admin maupun pelanggan.</p>
+        </article>
+        <article class="glass-card utility-card" id="pembayaran">
+          <h3>Pembayaran Digital</h3>
+          <p class="helper-text">Pelanggan bisa langsung generate pembayaran QRIS melalui Midtrans Snap dari dashboard client tanpa perlu kirim foto transfer manual.</p>
+        </article>
+      </div>
+    </section>
+
   </main>
+
+  <footer>
+    Billing RTRW NET berbasis HTML, JavaScript, Google Apps Script, Google Sheets, Midtrans, dan simulasi Mikrotik.
+  </footer>
 
   <script>
     const API_ENDPOINT = "/api/proxy";
 
-    const session = JSON.parse(localStorage.getItem("billing_session") || "null");
-    if (!session || session.role !== "admin") {
-      window.location.href = "index.html";
-    }
-
-    const el = {
-      adminWelcome: document.getElementById("adminWelcome"),
-      totalPelangganValue: document.getElementById("totalPelangganValue"),
-      totalAktifValue: document.getElementById("totalAktifValue"),
-      totalIsolirValue: document.getElementById("totalIsolirValue"),
-      customerTableBody: document.getElementById("customerTableBody"),
-      ticketList: document.getElementById("ticketList"),
-      broadcastForm: document.getElementById("broadcastForm"),
-      broadcastMessage: document.getElementById("broadcastMessage"),
-      broadcastFeedback: document.getElementById("broadcastFeedback"),
-      refreshButton: document.getElementById("refreshButton"),
-      logoutButton: document.getElementById("logoutButton")
-    };
-
-    function formatCurrency(value) {
-      return new Intl.NumberFormat("id-ID", {
-        style: "currency",
-        currency: "IDR",
-        maximumFractionDigits: 0
-      }).format(Number(value || 0));
-    }
-
-    function formatDate(value) {
-      if (!value) return "-";
-      const date = new Date(value);
-      if (Number.isNaN(date.getTime())) return value;
-      return new Intl.DateTimeFormat("id-ID", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric"
-      }).format(date);
-    }
-
-    function buildUrl(action, params = {}) {
-      const url = new URL(API_ENDPOINT, window.location.origin);
-      url.searchParams.set("action", action);
-      Object.entries(params).forEach(([key, value]) => {
-        url.searchParams.set(key, value);
-      });
-      return url.toString();
-    }
-
-    async function fetchJson(url) {
-      const response = await fetch(url, { method: "GET" });
-      const result = await response.json();
-      if (!result.success) {
-        throw new Error(result.message || "Permintaan gagal.");
+    const loginForm = document.getElementById("loginForm");
+    const loginStatus = document.getElementById("loginStatus");
+    const heroSliderBadge = document.getElementById("heroSliderBadge");
+    const heroTitle = document.getElementById("heroTitle");
+    const heroDescription = document.getElementById("heroDescription");
+    const heroVisual = document.getElementById("heroVisual");
+    const heroSliderItems = [
+      {
+        badge: "Internet stabil tanpa lemot",
+        title: "Internet Stabil untuk Streaming, Kerja, dan Belajar",
+        description: "Koneksi dirancang untuk kebutuhan harian rumah dan usaha agar tetap lancar saat meeting online, streaming, CCTV, hingga penggunaan banyak perangkat sekaligus.",
+        visual: `
+          <svg viewBox="0 0 520 280" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <defs>
+              <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#6366f1"/>
+                <stop offset="100%" stop-color="#f43f5e"/>
+              </linearGradient>
+            </defs>
+            <rect width="520" height="280" rx="24" fill="#0f172a"/>
+            <circle cx="110" cy="140" r="54" fill="rgba(99,102,241,0.18)"/>
+            <circle cx="400" cy="92" r="42" fill="rgba(244,63,94,0.18)"/>
+            <rect x="70" y="168" width="380" height="18" rx="9" fill="rgba(255,255,255,0.08)"/>
+            <rect x="92" y="120" width="52" height="66" rx="14" fill="url(#g1)"/>
+            <rect x="176" y="96" width="52" height="90" rx="14" fill="url(#g1)" opacity="0.85"/>
+            <rect x="260" y="74" width="52" height="112" rx="14" fill="url(#g1)" opacity="0.72"/>
+            <rect x="344" y="48" width="52" height="138" rx="14" fill="url(#g1)" opacity="0.6"/>
+            <path d="M96 60c22-20 45-29 70-28 36 1 66 16 89 42" fill="none" stroke="#a5b4fc" stroke-width="10" stroke-linecap="round"/>
+            <path d="M281 73c18-13 35-20 53-20 28 0 52 13 72 38" fill="none" stroke="#fda4af" stroke-width="10" stroke-linecap="round"/>
+          </svg>
+        `
+      },
+      {
+        badge: "Support teknisi lokal cepat",
+        title: "Teknisi Lokal Siap Respon Lebih Cepat",
+        description: "Saat ada kendala jaringan, tim teknisi lokal lebih mudah dijangkau dan lebih cepat datang ke lokasi sehingga gangguan bisa segera ditangani tanpa menunggu lama.",
+        visual: `
+          <svg viewBox="0 0 520 280" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <defs>
+              <linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#6366f1"/>
+                <stop offset="100%" stop-color="#f43f5e"/>
+              </linearGradient>
+            </defs>
+            <rect width="520" height="280" rx="24" fill="#0f172a"/>
+            <rect x="72" y="74" width="168" height="122" rx="24" fill="rgba(99,102,241,0.15)"/>
+            <rect x="280" y="56" width="168" height="158" rx="24" fill="rgba(244,63,94,0.12)"/>
+            <circle cx="156" cy="136" r="36" fill="url(#g2)"/>
+            <path d="M140 136h32M156 120v32" stroke="#fff" stroke-width="10" stroke-linecap="round"/>
+            <path d="M332 150c14-28 32-47 58-58 16-7 33-10 53-10" fill="none" stroke="#fda4af" stroke-width="12" stroke-linecap="round"/>
+            <path d="M329 182c24 7 47 9 70 5 23-4 41-13 56-26" fill="none" stroke="#a5b4fc" stroke-width="12" stroke-linecap="round"/>
+            <circle cx="392" cy="116" r="16" fill="#fff"/>
+            <circle cx="431" cy="98" r="11" fill="#fff" opacity="0.85"/>
+            <circle cx="449" cy="139" r="9" fill="#fff" opacity="0.7"/>
+          </svg>
+        `
+      },
+      {
+        badge: "Harga terjangkau & transparan",
+        title: "Harga Jelas, Transparan, dan Mudah Direncanakan",
+        description: "Biaya langganan dibuat sederhana dan terbuka agar pelanggan bisa memilih paket sesuai kebutuhan tanpa khawatir ada tagihan tambahan yang membingungkan.",
+        visual: `
+          <svg viewBox="0 0 520 280" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <defs>
+              <linearGradient id="g3" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#6366f1"/>
+                <stop offset="100%" stop-color="#f43f5e"/>
+              </linearGradient>
+            </defs>
+            <rect width="520" height="280" rx="24" fill="#0f172a"/>
+            <rect x="68" y="62" width="172" height="156" rx="24" fill="rgba(255,255,255,0.05)"/>
+            <rect x="280" y="46" width="172" height="188" rx="24" fill="rgba(255,255,255,0.05)"/>
+            <circle cx="154" cy="140" r="48" fill="url(#g3)"/>
+            <path d="M154 116v48M134 132c0-8 8-14 20-14h14c10 0 18 6 18 14s-8 14-18 14h-28c-10 0-18 6-18 14s8 14 18 14h14c12 0 20-6 20-14" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+            <rect x="314" y="82" width="102" height="20" rx="10" fill="url(#g3)"/>
+            <rect x="314" y="122" width="78" height="16" rx="8" fill="#a5b4fc"/>
+            <rect x="314" y="154" width="112" height="16" rx="8" fill="#fda4af"/>
+            <rect x="314" y="186" width="66" height="16" rx="8" fill="#c4b5fd"/>
+          </svg>
+        `
+      },
+      {
+        badge: "Cocok untuk keluarga & usaha",
+        title: "Satu Layanan untuk Rumah, Toko, dan UMKM",
+        description: "Paket internet fleksibel untuk keluarga, toko online, kantor kecil, dan usaha rumahan yang membutuhkan koneksi stabil setiap hari dengan biaya yang tetap terjangkau.",
+        visual: `
+          <svg viewBox="0 0 520 280" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <defs>
+              <linearGradient id="g4" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#6366f1"/>
+                <stop offset="100%" stop-color="#f43f5e"/>
+              </linearGradient>
+            </defs>
+            <rect width="520" height="280" rx="24" fill="#0f172a"/>
+            <path d="M74 164 150 98l74 66v56H74z" fill="rgba(99,102,241,0.22)"/>
+            <path d="M290 148h122l26 26v46H264v-46z" fill="rgba(244,63,94,0.18)"/>
+            <path d="M60 170 150 90l90 80" fill="none" stroke="#a5b4fc" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+            <rect x="112" y="160" width="34" height="60" rx="12" fill="#fff"/>
+            <rect x="304" y="88" width="92" height="60" rx="18" fill="url(#g4)"/>
+            <path d="M328 118h44M350 96v44" stroke="#fff" stroke-width="10" stroke-linecap="round"/>
+            <circle cx="406" cy="194" r="16" fill="#fff"/>
+            <circle cx="314" cy="194" r="16" fill="#fff"/>
+          </svg>
+        `
       }
-      return result;
+    ];
+    let heroSliderIndex = 0;
+
+    function setStatus(message, type) {
+      loginStatus.textContent = message;
+      loginStatus.className = "status" + (type ? " " + type : "");
     }
 
-    async function postJson(payload) {
-      const response = await fetch(API_ENDPOINT, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      });
-      const result = await response.json();
-      if (!result.success) {
-        throw new Error(result.message || "Permintaan gagal.");
-      }
-      return result;
-    }
+    function startHeroSlider() {
+      if (!heroSliderBadge || !heroTitle || !heroDescription || !heroVisual) return;
 
-    function setFeedback(message, type) {
-      el.broadcastFeedback.textContent = message;
-      el.broadcastFeedback.className = "feedback" + (type ? " " + type : "");
-    }
-
-    function renderCustomers(customers) {
-      if (!customers.length) {
-        el.customerTableBody.innerHTML = '<tr><td colspan="8" class="empty-state">Belum ada data pelanggan.</td></tr>';
-        return;
+      function renderHeroSlide() {
+        var slide = heroSliderItems[heroSliderIndex];
+        heroSliderBadge.textContent = slide.badge;
+        heroDescription.textContent = slide.description;
+        heroVisual.innerHTML = slide.visual;
       }
 
-      el.customerTableBody.innerHTML = customers.map((customer) => {
-        const systemClass = String(customer.statusSistem || "").toUpperCase() === "AKTIF" ? "active" : "isolated";
-        return `
-          <tr>
-            <td>${customer.id}</td>
-            <td>${customer.nama}</td>
-            <td>${customer.paket}</td>
-            <td>${formatCurrency(customer.harga)}</td>
-            <td><span class="pill ${systemClass}">${customer.statusSistem}</span></td>
-            <td>${formatDate(customer.tglJatuhTempo)}</td>
-            <td>${customer.statusPembayaran}</td>
-            <td>${customer.noWhatsApp || "-"}</td>
-          </tr>
-        `;
-      }).join("");
+      renderHeroSlide();
+      window.setInterval(() => {
+        heroSliderIndex = (heroSliderIndex + 1) % heroSliderItems.length;
+        renderHeroSlide();
+      }, 3000);
     }
 
-    function renderTickets(tickets) {
-      if (!tickets.length) {
-        el.ticketList.innerHTML = '<div class="empty-state">Belum ada tiket keluhan.</div>';
-        return;
-      }
-
-      el.ticketList.innerHTML = tickets.map((ticket) => {
-        const done = String(ticket.status || "").toUpperCase() === "SELESAI";
-        return `
-          <article class="ticket">
-            <div class="ticket-header">
-              <div>
-                <strong>${ticket.idTiket}</strong>
-                <div class="muted">${ticket.nama} • ${ticket.idPelanggan} • ${formatDate(ticket.tgl)}</div>
-              </div>
-              <span class="pill ${done ? "done" : "open"}">${ticket.status}</span>
-            </div>
-            <p style="margin:0 0 14px;line-height:1.7;">${ticket.pesan}</p>
-            ${done ? "" : `<button class="button button-success" type="button" data-ticket="${ticket.idTiket}">Selesai</button>`}
-          </article>
-        `;
-      }).join("");
-
-      el.ticketList.querySelectorAll("[data-ticket]").forEach((button) => {
-        button.addEventListener("click", async () => {
-          try {
-            await postJson({
-              action: "updateStatusKeluhan",
-              idTiket: button.dataset.ticket
-            });
-            await loadDashboard();
-          } catch (error) {
-            alert(error.message || "Gagal mengubah status keluhan.");
-          }
-        });
-      });
+    function saveSession(payload) {
+      localStorage.setItem("billing_session", JSON.stringify({
+        role: payload.role,
+        id: payload.user.id,
+        nama: payload.user.nama,
+        loginAt: new Date().toISOString()
+      }));
     }
 
-    function renderAdmin(data) {
-      el.adminWelcome.textContent = `${session.nama} • role admin`;
-      el.totalPelangganValue.textContent = data.statistik.totalPelanggan;
-      el.totalAktifValue.textContent = data.statistik.aktif;
-      el.totalIsolirValue.textContent = data.statistik.terisolir;
-      renderCustomers(data.pelanggan || []);
-      renderTickets(data.keluhan || []);
-    }
-
-    async function loadDashboard() {
-      try {
-        const result = await fetchJson(buildUrl("dashboardAdmin", { id: session.id }));
-        renderAdmin(result.data);
-      } catch (error) {
-        alert(error.message || "Gagal memuat dashboard admin.");
-      }
-    }
-
-    async function handleBroadcast(event) {
+    async function handleLogin(event) {
       event.preventDefault();
-      const pesan = el.broadcastMessage.value.trim();
+      setStatus("Memeriksa akun...", "");
 
-      if (!pesan) {
-        setFeedback("Pesan broadcast wajib diisi.", "error");
-        return;
-      }
+      const userId = document.getElementById("userId").value.trim();
+      const password = document.getElementById("password").value.trim();
 
       try {
-        await postJson({
-          action: "updateBroadcast",
-          pesan: pesan,
-          adminId: session.id
-        });
-        setFeedback("Broadcast berhasil diperbarui.", "success");
-        el.broadcastForm.reset();
-        await loadDashboard();
+        const url = new URL(API_ENDPOINT, window.location.origin);
+        url.searchParams.set("action", "login");
+        url.searchParams.set("id", userId);
+        url.searchParams.set("password", password);
+
+        const response = await fetch(url.toString(), { method: "GET" });
+        const result = await response.json();
+
+        if (!result.success) {
+          throw new Error(result.message || "Login gagal.");
+        }
+
+        saveSession(result);
+        setStatus("Login berhasil. Mengalihkan halaman...", "success");
+
+        window.setTimeout(() => {
+          window.location.href = result.role === "admin" ? "admin.html" : "dashboard.html";
+        }, 600);
       } catch (error) {
-        setFeedback(error.message || "Gagal menyimpan broadcast.", "error");
+        setStatus(error.message || "Terjadi kesalahan saat login.", "error");
       }
     }
 
-    function logout() {
-      localStorage.removeItem("billing_session");
-      window.location.href = "index.html";
-    }
-
-    el.broadcastForm.addEventListener("submit", handleBroadcast);
-    el.refreshButton.addEventListener("click", loadDashboard);
-    el.logoutButton.addEventListener("click", logout);
-
-    loadDashboard();
+    loginForm.addEventListener("submit", handleLogin);
+    startHeroSlider();
   </script>
 </body>
 </html>

@@ -35,3 +35,9 @@ console.log('PASS backend: auth, roles, ownership, logout, expiry, GET denial, s
 assert.equal(ctx.errorResponse_(new Error('Sheet tidak ditemukan: rahasia')).message,'Permintaan gagal. Hubungi administrator.');
 assert.equal(ctx.errorResponse_(new Error('Silakan login kembali.')).message,'Silakan login kembali.');
 console.log('PASS backend: internal errors sanitized');
+// Error konfigurasi (sheet/izin) harus tetap terlihat, bukan disamarkan jadi kredensial salah.
+ctx.getUser=()=>{ throw new Error('Sheet tidak ditemukan: Data_Pelanggan'); };
+assert.equal(post({action:'login',id:'x',password:'y'}).message,'Permintaan gagal. Hubungi administrator.');
+ctx.getUser=()=>{ throw new Error('ID atau password tidak valid.'); };
+assert.equal(post({action:'login',id:'z',password:'y'}).message,'ID atau password tidak valid.');
+console.log('PASS login: config errors not disguised as bad credentials');

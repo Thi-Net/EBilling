@@ -83,7 +83,11 @@ function login_(p) {
     if (failures >= 5) throw new Error("Terlalu banyak percobaan. Coba lagi setelah 15 menit.");
     var result;
     try { result = getUser(id, p.password); }
-    catch (error) { cache.put(key, String(failures + 1), 900); throw new Error("ID atau password tidak valid."); }
+    catch (error) {
+      // Hanya kredensial salah yang dihitung gagal; error konfigurasi/data diteruskan.
+      if (String(error.message) !== "ID atau password tidak valid.") throw error;
+      cache.put(key, String(failures + 1), 900); throw new Error("ID atau password tidak valid.");
+    }
     cache.remove(key);
     var token = Utilities.getUuid() + Utilities.getUuid();
     cache.put("session:" + token, JSON.stringify({id: result.user.id, role: result.role, expiresAt: Date.now() + 21600000}), 21600);

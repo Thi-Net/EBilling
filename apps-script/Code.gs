@@ -431,6 +431,11 @@ function setupTimeTriggers() {
 }
 
 // Jalankan manual dari editor: diagnoseLogin("ID_PELANGGAN_CONTOH")
+// Versi tanpa argumen (untuk tombol Run): isi ID di sini.
+function diagnoseLoginContoh() {
+  return diagnoseLogin("ISI_ID_PELANGGAN_DI_SINI");
+}
+
 function diagnoseLogin(idPelanggan) {
   var out = [];
   var props = PropertiesService.getScriptProperties();

@@ -105,7 +105,7 @@ function getUser(id, password) {
     throw new Error("ID dan password wajib diisi.");
   }
 
-  if (CONFIG.ADMIN_PASSWORD && String(id) === String(CONFIG.ADMIN_ID) && String(password) === String(CONFIG.ADMIN_PASSWORD)) {
+  if (CONFIG.ADMIN_PASSWORD && String(id).trim().toLowerCase() === String(CONFIG.ADMIN_ID).toLowerCase() && String(password) === String(CONFIG.ADMIN_PASSWORD)) {
     return {
       success: true,
       role: "admin",
@@ -120,9 +120,12 @@ function getUser(id, password) {
   var user = null;
   var i;
 
+  // ID pelanggan dicocokkan tanpa peduli huruf besar/kecil dan spasi tepi;
+  // password tetap harus persis (peka huruf besar/kecil).
+  var wanted = String(id).trim().toLowerCase();
   for (i = 0; i < pelanggan.length; i++) {
     if (
-      String(pelanggan[i].ID_Pelanggan) === String(id) &&
+      String(pelanggan[i].ID_Pelanggan).trim().toLowerCase() === wanted &&
       String(pelanggan[i].Password) === String(password)
     ) {
       user = pelanggan[i];

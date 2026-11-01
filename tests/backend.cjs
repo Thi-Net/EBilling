@@ -36,8 +36,16 @@ console.log('PASS backend: auth, roles, ownership, logout, expiry, GET denial, s
 assert.equal(ctx.errorResponse_(new Error('Sheet tidak ditemukan: rahasia')).message,'Permintaan gagal. Hubungi administrator.');
 assert.equal(ctx.errorResponse_(new Error('Silakan login kembali.')).message,'Silakan login kembali.');
 console.log('PASS backend: internal errors sanitized');
+// ID pelanggan cocok tanpa peduli huruf besar/kecil; password tetap peka huruf besar/kecil.
+const rows=[['ID_Pelanggan','Password','Nama_Lengkap','Paket_Internet','Harga'],['user1','pass1237','Budi','Paket Cermat',150000]];
+ctx.SpreadsheetApp={getActiveSpreadsheet:()=>({getSheetByName:n=>({getDataRange:()=>({getValues:()=>rows})})}),openById:()=>null};
+assert.equal(ctx.getUser('  USER1 ','pass1237').user.id,'user1','ID case/space-insensitive');
+assert.throws(()=>ctx.getUser('user1','PASS1237'),/tidak valid/,'password tetap case-sensitive');
+assert.equal(ctx.getUser('admin','test-only-password').role,'admin','admin ID case-insensitive');
+console.log('PASS login: ID case-insensitive, password case-sensitive');
 // Error konfigurasi (sheet/izin) harus tetap terlihat, bukan disamarkan jadi kredensial salah.
 ctx.getUser=()=>{ throw new Error('Sheet tidak ditemukan: Data_Pelanggan'); };
+console.error=()=>{};
 assert.equal(post({action:'login',id:'x',password:'y'}).message,'Permintaan gagal. Hubungi administrator.');
 ctx.getUser=()=>{ throw new Error('ID atau password tidak valid.'); };
 assert.equal(post({action:'login',id:'z',password:'y'}).message,'ID atau password tidak valid.');

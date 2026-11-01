@@ -7,6 +7,7 @@ const cache = new Map();
 const props = {ADMIN_ID:'admin', ADMIN_PASSWORD:'test-only-password', MIDTRANS_SERVER_KEY:'test-only-key'};
 const ctx = vm.createContext({console, Date, JSON, Object, Number, String, Math, isNaN,
   PropertiesService:{getScriptProperties:()=>({getProperty:k=>props[k] || null})},
+  SpreadsheetApp:{getActiveSpreadsheet:()=>null},
   CacheService:{getScriptCache:()=>({get:k=>cache.get(k)||null,put:(k,v)=>cache.set(k,v),remove:k=>cache.delete(k)})},
   LockService:{getScriptLock:()=>({waitLock(){},releaseLock(){}})},
   Utilities:{getUuid:()=>crypto.randomUUID(),DigestAlgorithm:{SHA_512:'sha512'},Charset:{UTF_8:'utf8'},

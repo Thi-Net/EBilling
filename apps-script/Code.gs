@@ -1,5 +1,6 @@
 var CONFIG = {
-  SPREADSHEET_ID: PropertiesService.getScriptProperties().getProperty("SPREADSHEET_ID"),
+  // Script Property menang; kalau kosong pakai spreadsheet yang terikat ke script (deployment Web App).
+  SPREADSHEET_ID: PropertiesService.getScriptProperties().getProperty("SPREADSHEET_ID") || getBoundSpreadsheetId_(),
   MIDTRANS_SERVER_KEY: PropertiesService.getScriptProperties().getProperty("MIDTRANS_SERVER_KEY"),
   MIDTRANS_IS_PRODUCTION: PropertiesService.getScriptProperties().getProperty("MIDTRANS_IS_PRODUCTION") === "true",
   ADMIN_ID: "admin",
@@ -440,12 +441,11 @@ function diagnoseLogin(idPelanggan) {
   var out = [];
   var props = PropertiesService.getScriptProperties();
   var sid = props.getProperty("SPREADSHEET_ID");
-  out.push("SPREADSHEET_ID: " + (sid ? "ada (" + sid.length + " karakter)" : "KOSONG"));
+  out.push("SPREADSHEET_ID: " + (sid ? "ada (" + sid.length + " karakter)" : "KOSONG -> pakai spreadsheet terikat: " + (getBoundSpreadsheetId_() ? "ADA" : "TIDAK ADA")));
   out.push("ADMIN_PASSWORD: " + (props.getProperty("ADMIN_PASSWORD") ? "ada" : "KOSONG"));
   out.push("MIDTRANS_SERVER_KEY: " + (props.getProperty("MIDTRANS_SERVER_KEY") ? "ada" : "KOSONG"));
-  if (!sid) { Logger.log(out.join("\n")); return out.join("\n"); }
   try {
-    var ss = SpreadsheetApp.openById(sid);
+    var ss = getSpreadsheet_();
     out.push("Spreadsheet: " + ss.getName());
     out.push("Daftar sheet: " + ss.getSheets().map(function(s){return s.getName();}).join(", "));
     var sh = ss.getSheetByName(CONFIG.SHEETS.PELANGGAN);
@@ -598,8 +598,21 @@ function findPelangganById_(idPelanggan) {
   return null;
 }
 
+function getBoundSpreadsheetId_() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    return ss ? ss.getId() : null;
+  } catch (e) { return null; }
+}
+
+function getSpreadsheet_() {
+  var ss = null;
+  try { ss = SpreadsheetApp.getActiveSpreadsheet(); } catch (e) {}
+  return ss || SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+}
+
 function getSheet_(sheetName) {
-  var spreadsheet = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+  var spreadsheet = getSpreadsheet_();
   var sheet = spreadsheet.getSheetByName(sheetName);
 
   if (!sheet) {

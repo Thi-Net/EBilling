@@ -85,8 +85,11 @@ function login_(p) {
     var result;
     try { result = getUser(id, p.password); }
     catch (error) {
-      // Hanya kredensial salah yang dihitung gagal; error konfigurasi/data diteruskan.
-      if (String(error.message) !== "ID atau password tidak valid.") throw error;
+      // Hanya kredensial salah yang dihitung gagal; log penyebab internal di Executions.
+      if (String(error.message) !== "ID atau password tidak valid.") {
+        console.error("Login service error:", error && error.stack ? error.stack : error);
+        throw error;
+      }
       cache.put(key, String(failures + 1), 900); throw new Error("ID atau password tidak valid.");
     }
     cache.remove(key);

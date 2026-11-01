@@ -1,61 +1,68 @@
-export default async function handler(req, res) {
-  const SCRIPT_URL = process.env.SCRIPT_URL;
+const ACTIONS = new Set([
+  "login", "logout", "dashboardClient", "dashboardAdmin", "kirimKeluhan",
+  "updateBroadcast", "updateStatusKeluhan", "generateInvoiceMidtrans"
+]);
 
-  if (!SCRIPT_URL) {
-    return res.status(500).json({
-      success: false,
-      msg: "SCRIPT_URL belum diset di Vercel"
-    });
+export default async function handler(req, res) {
+  res.setHeader("Cache-Control", "no-store");
+  const fail = (status, message) => res.status(status).json({ success: false, message });
+  if (req.method !== "POST") {
+    res.setHeader("Allow", "POST");
+    return fail(405, "Metode tidak diizinkan.");
+  }
+  if (Object.keys(req.query || {}).length || (req.url || "").includes("?")) {
+    return fail(400, "Parameter URL tidak diizinkan.");
   }
 
+  let body;
   try {
-    const cleanUrl = SCRIPT_URL.trim().replace(/['"]+/g, "");
-    const searchParams = new URLSearchParams();
-    const query = req.query || {};
-    const queryKeys = Object.keys(query);
-    let i;
-    let key;
-    let value;
-
-    for (i = 0; i < queryKeys.length; i++) {
-      key = queryKeys[i];
-      value = query[key];
-
-      if (Array.isArray(value)) {
-        value.forEach(function(item) {
-          searchParams.append(key, item);
-        });
-      } else if (typeof value !== "undefined") {
-        searchParams.append(key, value);
-      }
+    body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
+  } catch {
+    return fail(400, "JSON tidak valid.");
+  }
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return fail(400, "Permintaan tidak valid.");
+  }
+  const isAction = Object.prototype.hasOwnProperty.call(body, "action");
+  if (isAction) {
+    if (!ACTIONS.has(body.action)) return fail(400, "Aksi tidak diizinkan.");
+  } else {
+    if (Object.keys(body).some((key) => !["order_id", "status_code", "gross_amount", "signature_key", "transaction_status", "fraud_status", "payment_type"].includes(key))) return fail(400, "Notifikasi pembayaran tidak valid.");
+    const fields = ["order_id", "status_code", "gross_amount", "signature_key", "transaction_status"];
+    if (!fields.every((key) => typeof body[key] === "string" && body[key].trim())) {
+      return fail(400, "Notifikasi pembayaran tidak valid.");
     }
+  }
+  if (isAction && Object.keys(body).some((key) => !["action", "token", "id", "password", "idPelanggan", "pesan", "idTiket"].includes(key))) return fail(400, "Parameter tidak diizinkan.");
 
-    const urlParams = searchParams.toString();
-    const finalUrl = cleanUrl.includes("?")
-      ? (urlParams ? `${cleanUrl}&${urlParams}` : cleanUrl)
-      : (urlParams ? `${cleanUrl}?${urlParams}` : cleanUrl);
-
-    const requestInit = {
-      method: req.method,
-      headers: {
-        "Accept": "application/json"
-      }
-    };
-
-    if (req.method !== "GET" && req.method !== "HEAD") {
-      requestInit.headers["Content-Type"] = "application/json";
-      requestInit.body = JSON.stringify(req.body || {});
-    }
-
-    const response = await fetch(finalUrl, requestInit);
-
-    const text = await response.text();
-    return res.status(response.status || 200).send(text);
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      msg: "Proxy error",
-      error_debug: error.message
+  const scriptUrl = (process.env.SCRIPT_URL || "").trim();
+  if (!/^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(scriptUrl)) {
+    return fail(500, "Layanan belum tersedia.");
+  }
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000);
+  try {
+    const response = await fetch(scriptUrl, {
+      method: "POST",
+      headers: { "Accept": "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: controller.signal
     });
+    if (!response.ok) return fail(502, "Layanan sedang bermasalah.");
+    const result = JSON.parse(await response.text());
+    if (!result || typeof result !== "object" || Array.isArray(result) || typeof result.success !== "boolean") {
+      return fail(502, "Respons layanan tidak valid.");
+    }
+    // Webhook gagal harus non-2xx agar Midtrans mengulang pengiriman.
+    if (!isAction && !result.success) {
+      res.setHeader("Retry-After", "30");
+      return res.status(502).json(result);
+    }
+    return res.status(200).json(result);
+  } catch {
+    return fail(controller.signal.aborted ? 504 : 502,
+      controller.signal.aborted ? "Waktu tunggu layanan habis." : "Layanan tidak dapat dihubungi.");
+  } finally {
+    clearTimeout(timeout);
   }
 }

@@ -394,8 +394,14 @@
     };
     const API_ENDPOINT = "/api/proxy";
 
-    const session = JSON.parse(localStorage.getItem("billing_session") || "null");
-    if (!session || session.role !== "client") {
+    const session = (() => {
+      try {
+        return JSON.parse(localStorage.getItem("billing_session") || "null");
+      } catch (error) {
+        return null;
+      }
+    })();
+    if (!session || session.role !== "client" || !session.token) {
       window.location.href = "index.html";
     }
 
@@ -449,31 +455,26 @@
       element.className = "feedback" + (type ? " " + type : "");
     }
 
-    function buildUrl(action, params = {}) {
-      const url = new URL(API_ENDPOINT, window.location.origin);
-      url.searchParams.set("action", action);
-      Object.entries(params).forEach(([key, value]) => {
-        url.searchParams.set(key, value);
-      });
-      return url.toString();
-    }
 
-    async function fetchJson(url) {
-      const response = await fetch(url, { method: "GET" });
-      const result = await response.json();
-      if (!result.success) {
-        throw new Error(result.message || "Permintaan gagal.");
-      }
-      return result;
+
+
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      })[char]);
     }
 
     async function postJson(payload) {
+      if (!session || session.role !== "client" || !session.token) {
+        throw new Error("Sesi berakhir. Silakan login kembali.");
+      }
       const response = await fetch(API_ENDPOINT, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ ...payload, token: session.token })
       });
       const result = await response.json();
       if (!result.success) {
@@ -496,10 +497,10 @@
 
       el.historyList.innerHTML = items.map((item) => `
         <div class="history-item">
-          <strong>${item.orderId}</strong>
-          <div class="muted">${formatDate(item.tgl)} • ${item.metode}</div>
+          <strong>${escapeHtml(item.orderId)}</strong>
+          <div class="muted">${escapeHtml(formatDate(item.tgl))} • ${escapeHtml(item.metode)}</div>
           <div style="display:flex;justify-content:space-between;gap:12px;margin-top:8px;">
-            <span>Status: <strong>${item.status}</strong></span>
+            <span>Status: <strong>${escapeHtml(item.status)}</strong></span>
             <strong>${formatCurrency(item.nominal)}</strong>
           </div>
         </div>
@@ -513,7 +514,7 @@
       }
 
       el.broadcastList.innerHTML = items.map((item) => `
-        <div class="broadcast-item">${item.pesan}</div>
+        <div class="broadcast-item">${escapeHtml(item.pesan)}</div>
       `).join("");
     }
 
@@ -539,7 +540,7 @@
 
     async function loadDashboard() {
       try {
-        const result = await fetchJson(buildUrl("dashboardClient", { id: session.id }));
+        const result = await postJson({ action: "dashboardClient" });
         renderDashboard(result.data);
       } catch (error) {
         alert(error.message || "Gagal memuat dashboard.");
@@ -551,8 +552,7 @@
 
       try {
         const result = await postJson({
-          action: "generateInvoiceMidtrans",
-          idPelanggan: state.user.id
+          action: "generateInvoiceMidtrans"
         });
 
         if (window.snap && result.data.snapToken) {
@@ -588,7 +588,6 @@
       try {
         const result = await postJson({
           action: "kirimKeluhan",
-          idPelanggan: session.id,
           pesan: pesan
         });
 
@@ -609,9 +608,15 @@
       window.open(`https://wa.me/${APP_CONFIG.WHATSAPP_ADMIN}?text=${text}`, "_blank", "noopener");
     }
 
-    function logout() {
-      localStorage.removeItem("billing_session");
-      window.location.href = "index.html";
+    async function logout() {
+      try {
+        await postJson({ action: "logout" });
+      } catch (error) {
+        alert("Sesi lokal dihapus. Jika layanan bermasalah, sesi server akan kedaluwarsa otomatis.");
+      } finally {
+        localStorage.removeItem("billing_session");
+        window.location.href = "index.html";
+      }
     }
 
     el.payButton.addEventListener("click", handlePay);
@@ -619,7 +624,7 @@
     el.logoutButton.addEventListener("click", logout);
     el.complaintForm.addEventListener("submit", handleComplaint);
 
-    loadDashboard();
+    if (session && session.role === "client" && session.token) loadDashboard();
   </script>
 </body>
 </html>

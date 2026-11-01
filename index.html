@@ -732,10 +732,14 @@
     }
 
     function saveSession(payload) {
+      if (!payload.token) {
+        throw new Error("Sesi login tidak valid. Silakan coba lagi.");
+      }
       localStorage.setItem("billing_session", JSON.stringify({
         role: payload.role,
         id: payload.user.id,
         nama: payload.user.nama,
+        token: payload.token,
         loginAt: new Date().toISOString()
       }));
     }
@@ -745,15 +749,19 @@
       setStatus("Memeriksa akun...", "");
 
       const userId = document.getElementById("userId").value.trim();
-      const password = document.getElementById("password").value.trim();
+      const password = document.getElementById("password").value;
+
+      if (!userId || !password) {
+        setStatus("ID pelanggan dan password wajib diisi.", "error");
+        return;
+      }
 
       try {
-        const url = new URL(API_ENDPOINT, window.location.origin);
-        url.searchParams.set("action", "login");
-        url.searchParams.set("id", userId);
-        url.searchParams.set("password", password);
-
-        const response = await fetch(url.toString(), { method: "GET" });
+        const response = await fetch(API_ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "login", id: userId, password: password })
+        });
         const result = await response.json();
 
         if (!result.success) {

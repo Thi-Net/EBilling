@@ -406,6 +406,8 @@ function setupTimeTriggers() {
   var i;
   var handler;
 
+  Logger.log("Trigger sebelum: " + triggers.map(function(t){return t.getHandlerFunction();}).join(", "));
+
   for (i = 0; i < triggers.length; i++) {
     handler = triggers[i].getHandlerFunction();
     if (handler === "autoIsolir" || handler === "resetBulanan") {
@@ -418,12 +420,48 @@ function setupTimeTriggers() {
     .everyDays(1)
     .atHour(0)
     .create();
+  Logger.log("Trigger autoIsolir dibuat.");
 
   ScriptApp.newTrigger("resetBulanan")
     .timeBased()
     .everyDays(1)
     .atHour(0)
     .create();
+  Logger.log("Trigger resetBulanan dibuat. Total: " + ScriptApp.getProjectTriggers().length);
+}
+
+// Jalankan manual dari editor: diagnoseLogin("ID_PELANGGAN_CONTOH")
+function diagnoseLogin(idPelanggan) {
+  var out = [];
+  var props = PropertiesService.getScriptProperties();
+  var sid = props.getProperty("SPREADSHEET_ID");
+  out.push("SPREADSHEET_ID: " + (sid ? "ada (" + sid.length + " karakter)" : "KOSONG"));
+  out.push("ADMIN_PASSWORD: " + (props.getProperty("ADMIN_PASSWORD") ? "ada" : "KOSONG"));
+  out.push("MIDTRANS_SERVER_KEY: " + (props.getProperty("MIDTRANS_SERVER_KEY") ? "ada" : "KOSONG"));
+  if (!sid) { Logger.log(out.join("\n")); return out.join("\n"); }
+  try {
+    var ss = SpreadsheetApp.openById(sid);
+    out.push("Spreadsheet: " + ss.getName());
+    out.push("Daftar sheet: " + ss.getSheets().map(function(s){return s.getName();}).join(", "));
+    var sh = ss.getSheetByName(CONFIG.SHEETS.PELANGGAN);
+    if (!sh) { out.push(CONFIG.SHEETS.PELANGGAN + ": TIDAK ADA"); }
+    else {
+      var values = sh.getDataRange().getValues();
+      var h = values[0] || [];
+      out.push("Header: " + h.join(" | "));
+      out.push("Jumlah baris data: " + Math.max(0, values.length - 1));
+      var iId = h.indexOf("ID_Pelanggan"), iPw = h.indexOf("Password");
+      out.push("Kolom ID_Pelanggan=" + iId + ", Password=" + iPw);
+      if (idPelanggan && iId >= 0) {
+        var found = -1, r;
+        for (r = 1; r < values.length; r++) if (String(values[r][iId]) === String(idPelanggan)) { found = r; break; }
+        out.push("ID '" + idPelanggan + "': " + (found < 0 ? "TIDAK DITEMUKAN"
+          : "ditemukan baris " + (found + 1) + ", panjang password sel " + String(values[found][iPw]).length));
+      }
+    }
+  } catch (e) { out.push("ERROR buka spreadsheet: " + e.message); }
+  Logger.log(out.join("\n"));
+  return out.join("\n");
 }
 
 function isolirUser(idPelanggan) {

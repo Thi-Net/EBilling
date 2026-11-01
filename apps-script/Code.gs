@@ -746,3 +746,23 @@ function verifyMidtrans_(p) {
   p.fraud_status = current.fraud_status;
   p.payment_type = current.payment_type;
 }
+
+// Jalankan manual: diagnoseProperties()
+// Menampilkan semua scope properti + ID project, tanpa mencetak nilai.
+function diagnoseProperties() {
+  var out = ["Script ID: " + ScriptApp.getScriptId()];
+  var scopes = [
+    ["ScriptProperties", PropertiesService.getScriptProperties()],
+    ["UserProperties", PropertiesService.getUserProperties()],
+    ["DocumentProperties", PropertiesService.getDocumentProperties()]
+  ];
+  scopes.forEach(function(pair) {
+    var keys = pair[1].getKeys();
+    out.push(pair[0] + ": " + (keys.length ? keys.map(function(k) {
+      return k + "=" + String(pair[1].getProperty(k)).length + "ch";
+    }).join(", ") : "KOSONG"));
+  });
+  out.push("Spreadsheet aktif: " + (function(){ try { return SpreadsheetApp.getActiveSpreadsheet() ? "ada (bound)" : "tidak bound"; } catch(e) { return "error: " + e.message; } })());
+  Logger.log(out.join("\n"));
+  return out.join("\n");
+}

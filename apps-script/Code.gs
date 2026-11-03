@@ -216,6 +216,8 @@ function getDashboardClient(idPelanggan) {
       tglPasang: formatDateIso_(pelanggan.Tgl_Pasang),
       tglJatuhTempo: formatDateIso_(pelanggan.Tgl_Jatuh_Tempo),
       statusPembayaran: openInvoice ? "BELUM" : "LUNAS",
+      adaTagihan: !!openInvoice,
+      periodeTagihan: openInvoice ? String(openInvoice.Periode) : "",
       noWhatsApp: pelanggan.No_WhatsApp
     },
     riwayat: riwayat,
@@ -536,6 +538,7 @@ function handleMidtransWebhook_(payload) {
     } catch (chainError) {
       console.error("Gagal terbitkan invoice berantai:", chainError && chainError.stack ? chainError.stack : chainError);
     }
+    syncStatusPembayaran_(id);
 
     return {success:true,message:"Pembayaran berhasil diproses.",data:{idPelanggan:id}};
   } finally { lock.releaseLock(); }
@@ -591,6 +594,13 @@ function findLatestSettledPeriod_(idPelanggan) {
 }
 
 // Catat invoice baru (tanpa token Snap; token dibuat saat pelanggan membayar).
+// Sinkronkan kolom Status_Pembayaran (kolom 9) Data_Pelanggan dengan
+// Log_Invoice: ada invoice belum lunas -> BELUM, tidak ada -> LUNAS.
+function syncStatusPembayaran_(idPelanggan) {
+  var paid = !findLatestUnpaidInvoice_(idPelanggan);
+  updatePelangganPayment_(idPelanggan, {statusPembayaran: paid ? "LUNAS" : "BELUM"});
+}
+
 function createInvoiceRow_(idPelanggan, periodKey) {
   var customer = findPelangganById_(idPelanggan);
   if (!customer) throw new Error("Pelanggan tidak ditemukan: " + idPelanggan);

@@ -519,6 +519,12 @@
     @media (prefers-reduced-motion: reduce) {
       * { transition: none !important; }
     }
+  
+    .btn-primary-white.is-disabled, button.is-disabled {
+      opacity: .55;
+      cursor: not-allowed;
+      pointer-events: auto;
+    }
   </style>
 </head>
 <body>
@@ -700,7 +706,16 @@
       logoutButton: document.getElementById("logoutButton")
     };
 
-    function formatCurrency(value) {
+    function formatPeriodeId_(periode) {
+  const map = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+  const parts = String(periode).split("-");
+  if (parts.length !== 2) return String(periode);
+  const y = Number(parts[0]), m = Number(parts[1]);
+  if (!y || !m || m < 1 || m > 12) return String(periode);
+  return map[m - 1] + " " + y;
+}
+
+function formatCurrency(value) {
       return new Intl.NumberFormat("id-ID", {
         style: "currency",
         currency: "IDR",
@@ -807,6 +822,13 @@
       el.welcomeText.textContent = `${data.user.nama} • ${data.user.id}`;
       el.heroMessage.textContent = `Paket ${data.user.paket} aktif dengan tagihan ${formatCurrency(data.user.harga)} per bulan.`;
       renderStatus(data.user.statusSistem);
+      const tidakAdaTagihan = data.user.adaTagihan === false || data.user.statusPembayaran === "LUNAS";
+      if (el.payButton) {
+        el.payButton.disabled = tidakAdaTagihan;
+        el.payButton.setAttribute("aria-disabled", String(tidakAdaTagihan));
+        el.payButton.classList.toggle("is-disabled", tidakAdaTagihan);
+        el.payButton.title = tidakAdaTagihan ? "Tidak ada tagihan yang harus dibayar." : "";
+      }
 
       el.paketValue.textContent = data.user.paket || "-";
       el.hargaValue.textContent = formatCurrency(data.user.harga);

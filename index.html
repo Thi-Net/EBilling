@@ -3,23 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ThiNet</title>
+  <title>ThiNet | Internet Stabil untuk Rumah &amp; Usaha</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #f5f4ef;
-      --bg-soft: #eeece5;
-      --panel: #fffefa;
-      --line: #dfddd4;
-      --text: #20251f;
-      --muted: #687064;
-      --indigo: #275c45;
-      --rose: #d9e6d8;
+      --bg: #ffffff;
+      --bg-soft: #f4f7fb;
+      --panel: #ffffff;
+      --line: #e5eaf1;
+      --text: #172033;
+      --muted: #5d6b80;
+      --indigo: #3763eb;
+      --rose: #6f58e8;
       --lime: #22c55e;
       --warning: #f59e0b;
-      --shadow: 0 14px 36px rgba(35, 43, 35, 0.08);
+      --shadow: 0 14px 36px rgba(35, 55, 90, 0.08);
     }
 
     * {
@@ -49,25 +49,26 @@
     }
 
     .navbar-wrap {
-      position: sticky;
-      top: 12px;
-      z-index: 50;
-      padding-top: 12px;
-    }
+          position: sticky;
+          top: 0;
+          z-index: 50;
+          padding-top: 0;
+        }
 
-    .navbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      padding: 14px 18px;
-      border: 1px solid var(--line);
-      border-radius: 20px;
-      background: var(--panel);
-      box-shadow: var(--shadow);
-    }
+        .navbar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+          padding: 14px 18px;
+          border: 1px solid var(--line);
+          border-radius: 0 0 16px 16px;
+          border-top: 0;
+          background: var(--panel);
+          box-shadow: var(--shadow);
+        }
 
-    .brand {
+        .brand {
       display: flex;
       align-items: center;
       gap: 12px;
@@ -106,16 +107,16 @@
     }
 
     .nav-login {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 10px 16px;
-      border-radius: 999px;
-      color: var(--indigo);
-      font-weight: 700;
-      background: #e7eee5;
-      border: 1px solid #d6e1d4;
-    }
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 10px 16px;
+          border-radius: 999px;
+          color: var(--indigo);
+          font-weight: 700;
+          background: var(--bg-soft);
+          border: 1px solid var(--line);
+        }
 
     .hero {
       display: grid;
@@ -147,14 +148,14 @@
     }
 
     .badge,
-    .chip {
-      padding: 10px 14px;
-      border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      background: rgba(255, 255, 255, 0.05);
-      color: var(--text);
-      font-size: 0.92rem;
-    }
+        .chip {
+          padding: 10px 14px;
+          border-radius: 999px;
+          border: 1px solid var(--line);
+          background: var(--bg-soft);
+          color: var(--text);
+          font-size: 0.92rem;
+        }
 
     #heroSliderBadge {
       padding: 14px 22px;
@@ -217,20 +218,19 @@
     }
 
     .button-secondary {
-      color: var(--text);
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-    }
+          color: var(--text);
+          background: var(--bg-soft);
+          border: 1px solid var(--line);
+        }
 
-    .glass-card,
-    .section-card,
-    .login-card {
-      border: 1px solid var(--line);
-      border-radius: 28px;
-      background: var(--panel);
-      backdrop-filter: blur(20px);
-      box-shadow: var(--shadow);
-    }
+        .glass-card,
+        .section-card,
+        .login-card {
+          border: 1px solid var(--line);
+          border-radius: 28px;
+          background: var(--panel);
+          box-shadow: var(--shadow);
+        }
 
     section {
       padding: 28px 0;
@@ -273,11 +273,11 @@
     }
 
     .package-card.highlight {
-      border-color: rgba(99, 102, 241, 0.4);
-      background:
-        linear-gradient(180deg, rgba(99, 102, 241, 0.14), rgba(255, 255, 255, 0.04)),
-        var(--panel);
-    }
+          border-color: var(--indigo);
+          background:
+            linear-gradient(180deg, rgba(55, 99, 235, 0.12), transparent),
+            var(--panel);
+        }
 
     .package-card .price {
       margin: 16px 0;
@@ -324,20 +324,20 @@
     }
 
     .form-group input {
-      width: 100%;
-      padding: 14px 16px;
-      border-radius: 14px;
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      background: rgba(255, 255, 255, 0.06);
-      color: var(--text);
-      font: inherit;
-      outline: none;
-    }
+          width: 100%;
+          padding: 14px 16px;
+          border-radius: 14px;
+          border: 1px solid var(--line);
+          background: var(--bg-soft);
+          color: var(--text);
+          font: inherit;
+          outline: none;
+        }
 
-    .form-group input:focus {
-      border-color: rgba(99, 102, 241, 0.7);
-      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.16);
-    }
+        .form-group input:focus {
+          border-color: var(--indigo);
+          box-shadow: 0 0 0 4px rgba(55, 99, 235, 0.16);
+        }
 
     .helper-text,
     .status {
@@ -352,12 +352,12 @@
     }
 
     .status.error {
-      color: #fecaca;
-    }
+          color: #ef4444;
+        }
 
-    .status.success {
-      color: #bbf7d0;
-    }
+        .status.success {
+          color: #16a34a;
+        }
 
     footer {
       padding: 16px 0 40px;
@@ -609,98 +609,98 @@
         title: "Internet Stabil untuk Streaming, Kerja, dan Belajar",
         description: "Koneksi dirancang untuk kebutuhan harian rumah agar tetap lancar saat meeting online, streaming, bermain game online, hingga penggunaan banyak perangkat sekaligus.",
         visual: `
-          <svg viewBox="0 0 520 280" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <defs>
-              <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#6366f1"/>
-                <stop offset="100%" stop-color="#f43f5e"/>
-              </linearGradient>
-            </defs>
-            <rect width="520" height="280" rx="24" fill="#0f172a"/>
-            <circle cx="110" cy="140" r="54" fill="rgba(99,102,241,0.18)"/>
-            <circle cx="400" cy="92" r="42" fill="rgba(244,63,94,0.18)"/>
-            <rect x="70" y="168" width="380" height="18" rx="9" fill="rgba(255,255,255,0.08)"/>
-            <rect x="92" y="120" width="52" height="66" rx="14" fill="url(#g1)"/>
-            <rect x="176" y="96" width="52" height="90" rx="14" fill="url(#g1)" opacity="0.85"/>
-            <rect x="260" y="74" width="52" height="112" rx="14" fill="url(#g1)" opacity="0.72"/>
-            <rect x="344" y="48" width="52" height="138" rx="14" fill="url(#g1)" opacity="0.6"/>
-            <path d="M96 60c22-20 45-29 70-28 36 1 66 16 89 42" fill="none" stroke="#a5b4fc" stroke-width="10" stroke-linecap="round"/>
-            <path d="M281 73c18-13 35-20 53-20 28 0 52 13 72 38" fill="none" stroke="#fda4af" stroke-width="10" stroke-linecap="round"/>
-          </svg>
-        `
+                  <svg viewBox="0 0 520 280" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <defs>
+                      <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#3763eb"/>
+                        <stop offset="100%" stop-color="#6f58e8"/>
+                      </linearGradient>
+                    </defs>
+                    <rect width="520" height="280" rx="24" fill="#f4f7fb"/>
+                    <circle cx="110" cy="140" r="54" fill="rgba(55, 99, 235, 0.12)"/>
+                    <circle cx="400" cy="92" r="42" fill="rgba(111, 88, 232, 0.12)"/>
+                    <rect x="70" y="168" width="380" height="18" rx="9" fill="#e5eaf1"/>
+                    <rect x="92" y="120" width="52" height="66" rx="14" fill="url(#g1)"/>
+                    <rect x="176" y="96" width="52" height="90" rx="14" fill="url(#g1)" opacity="0.85"/>
+                    <rect x="260" y="74" width="52" height="112" rx="14" fill="url(#g1)" opacity="0.72"/>
+                    <rect x="344" y="48" width="52" height="138" rx="14" fill="url(#g1)" opacity="0.6"/>
+                    <path d="M96 60c22-20 45-29 70-28 36 1 66 16 89 42" fill="none" stroke="#c7d2fe" stroke-width="10" stroke-linecap="round"/>
+                    <path d="M281 73c18-13 35-20 53-20 28 0 52 13 72 38" fill="none" stroke="#fda4af" stroke-width="10" stroke-linecap="round"/>
+                  </svg>
+                `
       },
       {
         badge: "Respon Cepat Keluhan",
         title: "Teknisi Siap Respon Lebih Cepat Pada Setiap Keluhan Pelanggan",
         description: "Saat ada kendala jaringan, tim teknisi lokal lebih mudah dijangkau dan lebih cepat datang ke lokasi sehingga gangguan bisa segera ditangani tanpa menunggu lama.",
         visual: `
-          <svg viewBox="0 0 520 280" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <defs>
-              <linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#6366f1"/>
-                <stop offset="100%" stop-color="#f43f5e"/>
-              </linearGradient>
-            </defs>
-            <rect width="520" height="280" rx="24" fill="#0f172a"/>
-            <rect x="72" y="74" width="168" height="122" rx="24" fill="rgba(99,102,241,0.15)"/>
-            <rect x="280" y="56" width="168" height="158" rx="24" fill="rgba(244,63,94,0.12)"/>
-            <circle cx="156" cy="136" r="36" fill="url(#g2)"/>
-            <path d="M140 136h32M156 120v32" stroke="#fff" stroke-width="10" stroke-linecap="round"/>
-            <path d="M332 150c14-28 32-47 58-58 16-7 33-10 53-10" fill="none" stroke="#fda4af" stroke-width="12" stroke-linecap="round"/>
-            <path d="M329 182c24 7 47 9 70 5 23-4 41-13 56-26" fill="none" stroke="#a5b4fc" stroke-width="12" stroke-linecap="round"/>
-            <circle cx="392" cy="116" r="16" fill="#fff"/>
-            <circle cx="431" cy="98" r="11" fill="#fff" opacity="0.85"/>
-            <circle cx="449" cy="139" r="9" fill="#fff" opacity="0.7"/>
-          </svg>
-        `
+                  <svg viewBox="0 0 520 280" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <defs>
+                      <linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#3763eb"/>
+                        <stop offset="100%" stop-color="#6f58e8"/>
+                      </linearGradient>
+                    </defs>
+                    <rect width="520" height="280" rx="24" fill="#f4f7fb"/>
+                    <rect x="72" y="74" width="168" height="122" rx="24" fill="rgba(55, 99, 235, 0.1)"/>
+                    <rect x="280" y="56" width="168" height="158" rx="24" fill="rgba(111, 88, 232, 0.08)"/>
+                    <circle cx="156" cy="136" r="36" fill="url(#g2)"/>
+                    <path d="M140 136h32M156 120v32" stroke="#fff" stroke-width="10" stroke-linecap="round"/>
+                    <path d="M332 150c14-28 32-47 58-58 16-7 33-10 53-10" fill="none" stroke="#fda4af" stroke-width="12" stroke-linecap="round"/>
+                    <path d="M329 182c24 7 47 9 70 5 23-4 41-13 56-26" fill="none" stroke="#c7d2fe" stroke-width="12" stroke-linecap="round"/>
+                    <circle cx="392" cy="116" r="16" fill="#fff"/>
+                    <circle cx="431" cy="98" r="11" fill="#fff" opacity="0.85"/>
+                    <circle cx="449" cy="139" r="9" fill="#fff" opacity="0.7"/>
+                  </svg>
+                `
       },
       {
         badge: "Harga terjangkau & transparan",
         title: "Harga Jelas, Transparan, dan Mudah Direncanakan",
         description: "Biaya langganan dibuat sederhana dan terbuka agar pelanggan bisa memilih paket sesuai kebutuhan tanpa khawatir ada tagihan tambahan yang membingungkan.",
         visual: `
-          <svg viewBox="0 0 520 280" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <defs>
-              <linearGradient id="g3" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#6366f1"/>
-                <stop offset="100%" stop-color="#f43f5e"/>
-              </linearGradient>
-            </defs>
-            <rect width="520" height="280" rx="24" fill="#0f172a"/>
-            <rect x="68" y="62" width="172" height="156" rx="24" fill="rgba(255,255,255,0.05)"/>
-            <rect x="280" y="46" width="172" height="188" rx="24" fill="rgba(255,255,255,0.05)"/>
-            <circle cx="154" cy="140" r="48" fill="url(#g3)"/>
-            <path d="M154 116v48M134 132c0-8 8-14 20-14h14c10 0 18 6 18 14s-8 14-18 14h-28c-10 0-18 6-18 14s8 14 18 14h14c12 0 20-6 20-14" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
-            <rect x="314" y="82" width="102" height="20" rx="10" fill="url(#g3)"/>
-            <rect x="314" y="122" width="78" height="16" rx="8" fill="#a5b4fc"/>
-            <rect x="314" y="154" width="112" height="16" rx="8" fill="#fda4af"/>
-            <rect x="314" y="186" width="66" height="16" rx="8" fill="#c4b5fd"/>
-          </svg>
-        `
+                  <svg viewBox="0 0 520 280" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <defs>
+                      <linearGradient id="g3" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#3763eb"/>
+                        <stop offset="100%" stop-color="#6f58e8"/>
+                      </linearGradient>
+                    </defs>
+                    <rect width="520" height="280" rx="24" fill="#f4f7fb"/>
+                    <rect x="68" y="62" width="172" height="156" rx="24" fill="#e5eaf1"/>
+                    <rect x="280" y="46" width="172" height="188" rx="24" fill="#e5eaf1"/>
+                    <circle cx="154" cy="140" r="48" fill="url(#g3)"/>
+                    <path d="M154 116v48M134 132c0-8 8-14 20-14h14c10 0 18 6 18 14s-8 14-18 14h-28c-10 0-18 6-18 14s8 14 18 14h14c12 0 20-6 20-14" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+                    <rect x="314" y="82" width="102" height="20" rx="10" fill="url(#g3)"/>
+                    <rect x="314" y="122" width="78" height="16" rx="8" fill="#c7d2fe"/>
+                    <rect x="314" y="154" width="112" height="16" rx="8" fill="#fda4af"/>
+                    <rect x="314" y="186" width="66" height="16" rx="8" fill="#ddd6fe"/>
+                  </svg>
+                `
       },
       {
         badge: "Pembayaran Mudah",
         title: "Pembayaran Dapat Dilakukan Dengan Mudah ",
         description: "Pembayaran Tagihan Bisa Melalui QRIS atau Transfer Dengan Mudah, Dan Status Pembayaran Langsung Otomatis Update.",
         visual: `
-          <svg viewBox="0 0 520 280" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <defs>
-              <linearGradient id="g4" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#6366f1"/>
-                <stop offset="100%" stop-color="#f43f5e"/>
-              </linearGradient>
-            </defs>
-            <rect width="520" height="280" rx="24" fill="#0f172a"/>
-            <path d="M74 164 150 98l74 66v56H74z" fill="rgba(99,102,241,0.22)"/>
-            <path d="M290 148h122l26 26v46H264v-46z" fill="rgba(244,63,94,0.18)"/>
-            <path d="M60 170 150 90l90 80" fill="none" stroke="#a5b4fc" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
-            <rect x="112" y="160" width="34" height="60" rx="12" fill="#fff"/>
-            <rect x="304" y="88" width="92" height="60" rx="18" fill="url(#g4)"/>
-            <path d="M328 118h44M350 96v44" stroke="#fff" stroke-width="10" stroke-linecap="round"/>
-            <circle cx="406" cy="194" r="16" fill="#fff"/>
-            <circle cx="314" cy="194" r="16" fill="#fff"/>
-          </svg>
-        `
+                  <svg viewBox="0 0 520 280" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <defs>
+                      <linearGradient id="g4" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#3763eb"/>
+                        <stop offset="100%" stop-color="#6f58e8"/>
+                      </linearGradient>
+                    </defs>
+                    <rect width="520" height="280" rx="24" fill="#f4f7fb"/>
+                    <path d="M74 164 150 98l74 66v56H74z" fill="rgba(55, 99, 235, 0.15)"/>
+                    <path d="M290 148h122l26 26v46H264v-46z" fill="rgba(111, 88, 232, 0.12)"/>
+                    <path d="M60 170 150 90l90 80" fill="none" stroke="#c7d2fe" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+                    <rect x="112" y="160" width="34" height="60" rx="12" fill="#fff"/>
+                    <rect x="304" y="88" width="92" height="60" rx="18" fill="url(#g4)"/>
+                    <path d="M328 118h44M350 96v44" stroke="#fff" stroke-width="10" stroke-linecap="round"/>
+                    <circle cx="406" cy="194" r="16" fill="#fff"/>
+                    <circle cx="314" cy="194" r="16" fill="#fff"/>
+                  </svg>
+                `
       }
     ];
     let heroSliderIndex = 0;

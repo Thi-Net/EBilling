@@ -8,6 +8,8 @@ var CONFIG = {
   ADMIN_NAME: "Administrator",
   WHATSAPP_ADMIN: "6281234567890",
   TIMEZONE: "Asia/Jakarta",
+  // Tanggal jatuh tempo tagihan tiap bulan; tgl berikutnya auto isolir bila belum bayar.
+  DUE_DAY: 20,
   SHEETS: {
     PELANGGAN: "Data_Pelanggan",
     PEMBAYARAN: "Log_Pembayaran",
@@ -16,6 +18,20 @@ var CONFIG = {
     INFORMASI: "Data_Informasi"
   }
 };
+
+// ---------------------------------------------------------------------------
+// SIKLUS TAGIHAN (prabayar berantai, satu invoice aktif per pelanggan):
+//  1. Tgl 1            : invoice terbit utk bulan layanan sebelumnya.
+//  2. Jatuh tempo tgl 20; tgl 21 ke atas belum dibayar -> TERISOLIR
+//     (berulang tiap bulan selama invoice aktif belum dibayar).
+//  3. Bayar kapan pun  : langsung AKTIF; invoice terkait SETTLEMENT.
+//  4. Setelah pelunasan: invoice bulan layanan berikutnya terbit saat tgl 1
+//     berikutnya; BILA pelunasan terjadi pada/atau setelah tgl 1 (dan tidak
+//     ada invoice aktif), invoice berikutnya langsung terbit (berantai).
+//  5. Bulan yang dilewati saat pelanggan terisolir tidak ditagih.
+//  6. statusPembayaran di dashboard = ada invoice belum lunas -> BELUM,
+//     tidak ada -> LUNAS.
+// ---------------------------------------------------------------------------
 
 function doGet(e) {
   return jsonOutput_({success: false, message: "Gunakan POST JSON."});
@@ -159,7 +175,7 @@ function getDashboardClient(idPelanggan) {
     throw new Error("Data pelanggan tidak ditemukan.");
   }
 
-  var currentInvoice = findInvoice_(idPelanggan, invoicePeriod_(new Date()));
+  var openInvoice = findLatestUnpaidInvoice_(idPelanggan);
   var riwayatRaw = getObjects_(getSheet_(CONFIG.SHEETS.PEMBAYARAN));
   var informasiRaw = getObjects_(getSheet_(CONFIG.SHEETS.INFORMASI));
   var riwayat = [];
@@ -199,7 +215,7 @@ function getDashboardClient(idPelanggan) {
       statusSistem: pelanggan.Status_Sistem,
       tglPasang: formatDateIso_(pelanggan.Tgl_Pasang),
       tglJatuhTempo: formatDateIso_(pelanggan.Tgl_Jatuh_Tempo),
-      statusPembayaran: currentInvoice && currentInvoice.Status === "SETTLEMENT" ? "LUNAS" : "BELUM",
+      statusPembayaran: openInvoice ? "BELUM" : "LUNAS",
       noWhatsApp: pelanggan.No_WhatsApp
     },
     riwayat: riwayat,
@@ -239,10 +255,7 @@ function getDashboardAdmin(idAdmin) {
       harga: toNumber_(pelangganRaw[i].Harga),
       statusSistem: pelangganRaw[i].Status_Sistem,
       tglJatuhTempo: formatDateIso_(pelangganRaw[i].Tgl_Jatuh_Tempo),
-      statusPembayaran: (function() {
-        var inv = findInvoice_(pelangganRaw[i].ID_Pelanggan, invoicePeriod_(new Date()));
-        return inv && inv.Status === "SETTLEMENT" ? "LUNAS" : "BELUM";
-      })(),
+      statusPembayaran: findLatestUnpaidInvoice_(pelangganRaw[i].ID_Pelanggan) ? "BELUM" : "LUNAS",
       noWhatsApp: pelangganRaw[i].No_WhatsApp
     });
   }
@@ -350,58 +363,103 @@ function updateStatusKeluhan(idTiket) {
 
 function generateInvoiceMidtrans(idPelanggan) {
   if (!idPelanggan) throw new Error("ID pelanggan wajib diisi.");
-  var lock = LockService.getScriptLock(); lock.waitLock(10000);
+  var lock = LockService.getScriptLock(); lock.waitLock(20000);
   try {
     var customer = findPelangganById_(idPelanggan);
     if (!customer) throw new Error("Pelanggan tidak ditemukan.");
-    var period = invoicePeriod_(new Date()), amount = toNumber_(customer.Harga);
+    var amount = toNumber_(customer.Harga);
     if (!CONFIG.MIDTRANS_SERVER_KEY || !Number.isInteger(amount) || amount <= 0) throw new Error("Konfigurasi pembayaran tidak valid.");
-    var old = findInvoice_(idPelanggan, period);
-    if (old) {
-      if (old.Status !== "FAILED" && old.Snap_Token) return {orderId: old.Order_ID, snapToken: old.Snap_Token, redirectUrl: old.Redirect_URL};
-      throw new Error("Invoice sudah ada atau sedang diproses. Coba lagi nanti.");
+
+    // Tagihan yang dibayar = invoice bulan layanan terbaru yang belum lunas.
+    var target = findLatestUnpaidInvoice_(idPelanggan);
+    if (!target) throw new Error("Tidak ada tagihan yang harus dibayar.");
+    if (target.Status === "SETTLEMENT") throw new Error("Tagihan sudah dibayar.");
+
+    // Token Snap yang masih aktif dipakai ulang agar tidak ada transaksi ganda.
+    if (target.Status === "PENDING" && target.Snap_Token) {
+      return {orderId: target.Order_ID, snapToken: target.Snap_Token, redirectUrl: target.Redirect_URL || ""};
     }
-    var orderId = "ORDER-" + String(customer.ID_Pelanggan).replace(/[^A-Za-z0-9_-]/g, "_").slice(0, 24) + "-" + Utilities.getUuid().replace(/-/g, "").slice(0, 12);
-    getSheet_(CONFIG.SHEETS.INVOICE).appendRow([orderId, customer.ID_Pelanggan, amount, period, "CREATING", "", "", new Date()]);
+
+    var orderId;
+    if (target.Status === "FAILED" || !target.Snap_Token) {
+      // Pakai Order_ID yang sudah tercatat untuk periode ini; bila percobaan
+      // lama gagal, buat baris baru supaya Order ID Midtrans tidak bentrok.
+      if (target.Status === "FAILED") {
+        var fresh = createInvoiceRow_(idPelanggan, periodKeyFromString_(target.Periode));
+        target = findInvoiceByOrder_(fresh.orderId);
+      }
+      orderId = target.Order_ID;
+    }
+
     var url = (CONFIG.MIDTRANS_IS_PRODUCTION ? "https://app.midtrans.com" : "https://app.sandbox.midtrans.com") + "/snap/v1/transactions";
-    var payload = {transaction_details:{order_id:orderId,gross_amount:amount},item_details:[{id:customer.ID_Pelanggan,price:amount,quantity:1,name:"Tagihan " + customer.Paket_Internet + " " + period}],customer_details:{first_name:customer.Nama_Lengkap,phone:customer.No_WhatsApp},enabled_payments:["qris","gopay","bank_transfer","echannel"]};
+    var payload = {transaction_details:{order_id:orderId,gross_amount:amount},item_details:[{id:customer.ID_Pelanggan,price:amount,quantity:1,name:"Tagihan " + customer.Paket_Internet + " " + target.Periode}],customer_details:{first_name:customer.Nama_Lengkap,phone:customer.No_WhatsApp},enabled_payments:["qris","gopay","bank_transfer","echannel"]};
     var response = UrlFetchApp.fetch(url,{method:"post",contentType:"application/json",payload:JSON.stringify(payload),headers:{Authorization:"Basic " + Utilities.base64Encode(CONFIG.MIDTRANS_SERVER_KEY + ":")},muteHttpExceptions:true});
     var body = safeParseJson_(response.getContentText() || "{}");
-    if (response.getResponseCode() < 200 || response.getResponseCode() >= 300 || !body.token) throw new Error("Gagal membuat transaksi Midtrans.");
+    if (response.getResponseCode() < 200 || response.getResponseCode() >= 300 || !body.token) {
+      updateInvoice_(orderId,{Status:"FAILED"});
+      throw new Error("Gagal membuat transaksi Midtrans.");
+    }
     updateInvoice_(orderId,{Status:"PENDING",Snap_Token:body.token,Redirect_URL:body.redirect_url || ""});
     return {orderId:orderId,snapToken:body.token,redirectUrl:body.redirect_url || ""};
   } finally { lock.releaseLock(); }
 }
 
+// ---------------------------------------------------------------------------
+// Trigger harian: terbitkan invoice tgl 1, isolir setelah tgl 20, sinkron status.
+// ---------------------------------------------------------------------------
+
 function autoIsolir() {
-  var lock = LockService.getScriptLock(); lock.waitLock(10000);
+  var lock = LockService.getScriptLock(); lock.waitLock(20000);
   try {
-  var sheet = getSheet_(CONFIG.SHEETS.PELANGGAN);
-  var data = sheet.getDataRange().getValues();
-  var now = startOfDay_(new Date());
-  var i;
-  var idPelanggan;
-  var tglPasang;
-  var jatuhTempo;
-  var statusSistem;
+    var sheet = getSheet_(CONFIG.SHEETS.PELANGGAN);
+    var data = sheet.getDataRange().getValues();
+    var now = startOfDay_(new Date());
+    var dayOfMonth = Number(Utilities.formatDate(now, CONFIG.TIMEZONE, "d"));
+    var jatuhTempo = computeDueDate_(now);
+    var i;
+    var idPelanggan;
+    var statusSistem;
+    var outstanding;
+    var paid;
 
-  for (i = 1; i < data.length; i++) {
-    idPelanggan = data[i][0];
-    tglPasang = data[i][6];
-    jatuhTempo = computeDueDate_(tglPasang, now);
-    statusSistem = String(data[i][5] || "").toUpperCase();
-    if (jatuhTempo) sheet.getRange(i + 1, 8).setValue(jatuhTempo);
-    // Status lunas ditentukan Log_Invoice periode berjalan, bukan kolom lama.
-    var invoice = findInvoice_(idPelanggan, invoicePeriod_(now));
-    var paid = !!invoice && invoice.Status === "SETTLEMENT";
-    sheet.getRange(i + 1, 9).setValue(paid ? "LUNAS" : "BELUM");
+    for (i = 1; i < data.length; i++) {
+      idPelanggan = data[i][0];
+      if (!idPelanggan) continue;
+      statusSistem = String(data[i][5] || "").toUpperCase();
 
-    if (now.getTime() > jatuhTempo.getTime() && !paid && statusSistem !== "TERISOLIR") {
-      sheet.getRange(i + 1, 6).setValue("TERISOLIR");
-      isolirUser(idPelanggan);
+      // 1) Tgl 1: terbitkan invoice bulan layanan sebelumnya (jika tidak ada
+      //    invoice aktif dan periode itu belum pernah dilunasi).
+      if (dayOfMonth === 1) {
+        ensureMonthlyInvoice_(idPelanggan, now);
+      }
+
+      // 2) Jatuh tempo selalu tanggal 20 bulan berjalan.
+      sheet.getRange(i + 1, 8).setValue(jatuhTempo);
+
+      outstanding = findLatestUnpaidInvoice_(idPelanggan);
+      paid = !outstanding;
+      sheet.getRange(i + 1, 9).setValue(paid ? "LUNAS" : "BELUM");
+
+      // 3) Lewat tgl 20 dan masih ada tagihan -> TERISOLIR.
+      if (dayOfMonth > CONFIG.DUE_DAY && !paid && statusSistem !== "TERISOLIR") {
+        sheet.getRange(i + 1, 6).setValue("TERISOLIR");
+        isolirUser(idPelanggan);
+      }
     }
-  }
   } finally { lock.releaseLock(); }
+}
+
+// Pastikan ada invoice untuk bulan layanan sebelumnya, kecuali masih ada
+// invoice aktif (belum lunas) atau periode itu sudah pernah dilunasi.
+// Dipanggil oleh trigger tgl 1 DAN setelah pelunasan (berantai).
+function ensureMonthlyInvoice_(idPelanggan, now) {
+  if (findLatestUnpaidInvoice_(idPelanggan)) return null; // masih ada tagihan aktif.
+
+  var candidateKey = periodKeyOfDate_(previousMonth_(now || new Date()));
+  var lastSettledKey = findLatestSettledPeriod_(idPelanggan);
+  if (lastSettledKey !== null && candidateKey <= lastSettledKey) return null; // sudah lunas / tidak ada bulan baru.
+
+  return createInvoiceRow_(idPelanggan, candidateKey);
 }
 
 function resetBulanan() {
@@ -437,44 +495,6 @@ function setupTimeTriggers() {
   Logger.log("Trigger resetBulanan dibuat. Total: " + ScriptApp.getProjectTriggers().length);
 }
 
-// Jalankan manual dari editor: diagnoseLogin("ID_PELANGGAN_CONTOH")
-// Versi tanpa argumen (untuk tombol Run): isi ID di sini.
-function diagnoseLoginContoh() {
-  return diagnoseLogin("ISI_ID_PELANGGAN_DI_SINI");
-}
-
-function diagnoseLogin(idPelanggan) {
-  var out = [];
-  var props = PropertiesService.getScriptProperties();
-  var sid = props.getProperty("SPREADSHEET_ID");
-  out.push("SPREADSHEET_ID: " + (sid ? "ada (" + sid.length + " karakter)" : "KOSONG -> pakai spreadsheet terikat: " + (getBoundSpreadsheetId_() ? "ADA" : "TIDAK ADA")));
-  out.push("ADMIN_PASSWORD: " + (props.getProperty("ADMIN_PASSWORD") ? "ada" : "KOSONG"));
-  out.push("MIDTRANS_SERVER_KEY: " + (props.getProperty("MIDTRANS_SERVER_KEY") ? "ada" : "KOSONG"));
-  try {
-    var ss = getSpreadsheet_();
-    out.push("Spreadsheet: " + ss.getName());
-    out.push("Daftar sheet: " + ss.getSheets().map(function(s){return s.getName();}).join(", "));
-    var sh = ss.getSheetByName(CONFIG.SHEETS.PELANGGAN);
-    if (!sh) { out.push(CONFIG.SHEETS.PELANGGAN + ": TIDAK ADA"); }
-    else {
-      var values = sh.getDataRange().getValues();
-      var h = values[0] || [];
-      out.push("Header: " + h.join(" | "));
-      out.push("Jumlah baris data: " + Math.max(0, values.length - 1));
-      var iId = h.indexOf("ID_Pelanggan"), iPw = h.indexOf("Password");
-      out.push("Kolom ID_Pelanggan=" + iId + ", Password=" + iPw);
-      if (idPelanggan && iId >= 0) {
-        var found = -1, r;
-        for (r = 1; r < values.length; r++) if (String(values[r][iId]) === String(idPelanggan)) { found = r; break; }
-        out.push("ID '" + idPelanggan + "': " + (found < 0 ? "TIDAK DITEMUKAN"
-          : "ditemukan baris " + (found + 1) + ", panjang password sel " + String(values[found][iPw]).length));
-      }
-    }
-  } catch (e) { out.push("ERROR buka spreadsheet: " + e.message); }
-  Logger.log(out.join("\n"));
-  return out.join("\n");
-}
-
 function isolirUser(idPelanggan) {
   Logger.log("Simulasi Mikrotik: isolir user " + idPelanggan);
 }
@@ -486,7 +506,7 @@ function aktifkanUser(idPelanggan) {
 function handleMidtransWebhook_(payload) {
   if (!payload || !payload.order_id) throw new Error("Webhook tidak valid.");
   verifyMidtrans_(payload);
-  var lock = LockService.getScriptLock(); lock.waitLock(10000);
+  var lock = LockService.getScriptLock(); lock.waitLock(20000);
   try {
     var invoice = findInvoiceByOrder_(payload.order_id);
     if (!invoice || Number(payload.gross_amount) !== toNumber_(invoice.Nominal)) throw new Error("Invoice pembayaran tidak valid.");
@@ -500,17 +520,86 @@ function handleMidtransWebhook_(payload) {
     if (invoice.Status === "SETTLEMENT") return {success: true, message: "Pembayaran sudah diproses."};
     // Semua langkah di bawah idempoten: aman diulang setelah gagal sebagian.
     updateInvoice_(payload.order_id,{Status:"PROCESSING"});
-    updatePelangganPayment_(id,{statusSistem:"AKTIF",statusPembayaran:"LUNAS"});
+    updatePelangganPayment_(id,{statusSistem:"AKTIF"});
     aktifkanUser(id);
     logPembayaran_(payload,"SETTLEMENT");
     updateInvoice_(payload.order_id,{Status:"SETTLEMENT"});
+
+    // Berantai: bila pelunasan terjadi saat tidak ada periode lain yang
+    // menunggu penerbitan, invoice bulan layanan berikutnya langsung terbit
+    // (hanya bila bulan itu sudah masuk jadwal terbit, yaitu tgl 1 ke atas).
+    // Contoh: lunas invoice Oktober pada 2 Jan -> invoice Desember langsung
+    // terbit (Nov dilewati karena terisolir). Lunas tgl 25 Nov -> tidak ada
+    // invoice baru; invoice berikutnya terbit otomatis tgl 1 Des.
+    try {
+      ensureMonthlyInvoice_(id, new Date());
+    } catch (chainError) {
+      console.error("Gagal terbitkan invoice berantai:", chainError && chainError.stack ? chainError.stack : chainError);
+    }
+
     return {success:true,message:"Pembayaran berhasil diproses.",data:{idPelanggan:id}};
   } finally { lock.releaseLock(); }
 }
 
-function invoicePeriod_(date) {
-  return Utilities.formatDate(new Date(date.getFullYear(),date.getMonth()-1,1),CONFIG.TIMEZONE,"yyyy-MM");
+// --- util periode (format "yyyy-MM") ----------------------------------------
+
+function periodKeyOfDate_(date) {
+  return date.getFullYear() * 12 + date.getMonth();
 }
+
+function previousMonth_(date) {
+  return new Date(date.getFullYear(), date.getMonth() - 1, 1);
+}
+
+function periodKeyFromString_(s) {
+  var parts = String(s).split("-");
+  return Number(parts[0]) * 12 + (Number(parts[1]) - 1);
+}
+
+function periodToString_(key) {
+  var y = Math.floor(key / 12);
+  var m = key % 12;
+  return y + "-" + ("0" + (m + 1)).slice(-2);
+}
+
+// Invoice bulan layanan terbaru yang belum lunas (apa pun statusnya kecuali
+// SETTLEMENT). Baris terakhir yang menang bila periode kembar.
+function findLatestUnpaidInvoice_(idPelanggan) {
+  var rows = getObjects_(getSheet_(CONFIG.SHEETS.INVOICE));
+  var latest = null;
+  var latestKey = -1;
+  for (var i = 0; i < rows.length; i++) {
+    if (String(rows[i].ID_Pelanggan) !== String(idPelanggan)) continue;
+    if (String(rows[i].Status) === "SETTLEMENT") continue;
+    var key = periodKeyFromString_(rows[i].Periode);
+    if (isNaN(key)) continue;
+    if (key >= latestKey) { latestKey = key; latest = rows[i]; }
+  }
+  return latest;
+}
+
+function findLatestSettledPeriod_(idPelanggan) {
+  var rows = getObjects_(getSheet_(CONFIG.SHEETS.INVOICE));
+  var latestKey = null;
+  for (var i = 0; i < rows.length; i++) {
+    if (String(rows[i].ID_Pelanggan) !== String(idPelanggan)) continue;
+    if (String(rows[i].Status) !== "SETTLEMENT") continue;
+    var key = periodKeyFromString_(rows[i].Periode);
+    if (!isNaN(key) && (latestKey === null || key > latestKey)) latestKey = key;
+  }
+  return latestKey;
+}
+
+// Catat invoice baru (tanpa token Snap; token dibuat saat pelanggan membayar).
+function createInvoiceRow_(idPelanggan, periodKey) {
+  var customer = findPelangganById_(idPelanggan);
+  if (!customer) throw new Error("Pelanggan tidak ditemukan: " + idPelanggan);
+  var period = periodToString_(periodKey);
+  var orderId = "ORDER-" + String(idPelanggan).replace(/[^A-Za-z0-9_-]/g, "_").slice(0, 24) + "-" + Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "yyyyMMddHHmmss");
+  getSheet_(CONFIG.SHEETS.INVOICE).appendRow([orderId, idPelanggan, toNumber_(customer.Harga), period, "PENDING", "", "", new Date()]);
+  return {orderId: orderId, period: period};
+}
+
 function findInvoiceByOrder_(orderId) {
   var rows=getObjects_(getSheet_(CONFIG.SHEETS.INVOICE));
   for(var i=0;i<rows.length;i++) if(String(rows[i].Order_ID)===String(orderId)) return rows[i];
@@ -570,18 +659,12 @@ function logPembayaran_(payload, status) {
 function syncJatuhTempo_() {
   var sheet = getSheet_(CONFIG.SHEETS.PELANGGAN);
   var data = sheet.getDataRange().getValues();
-  var now = new Date();
+  var dueDate = computeDueDate_(new Date());
   var i;
-  var dueDate;
   var currentDueDate;
   var currentTime;
 
   for (i = 1; i < data.length; i++) {
-    dueDate = computeDueDate_(data[i][6], now);
-    if (!dueDate) {
-      continue;
-    }
-
     currentDueDate = data[i][7];
     currentTime = currentDueDate instanceof Date ? currentDueDate.getTime() : new Date(currentDueDate).getTime();
 
@@ -683,14 +766,10 @@ function formatDateIso_(value) {
   return Utilities.formatDate(date, CONFIG.TIMEZONE, "yyyy-MM-dd'T'HH:mm:ss");
 }
 
-function computeDueDate_(installDateValue, referenceDate) {
-  var installDate = startOfDay_(installDateValue);
-  if (!installDate) {
-    return null;
-  }
-  // Tenggat pembayaran selalu tanggal 20 pada bulan penerbitan invoice.
+function computeDueDate_(referenceDate) {
+  // Tenggat pembayaran selalu tanggal 20 pada bulan berjalan.
   var ref = startOfDay_(referenceDate || new Date());
-  return new Date(ref.getFullYear(), ref.getMonth(), 20);
+  return new Date(ref.getFullYear(), ref.getMonth(), CONFIG.DUE_DAY);
 }
 
 function startOfDay_(value) {
@@ -725,7 +804,7 @@ function jsonOutput_(obj) {
 function errorResponse_(error) {
   var message = error && error.message ? error.message : "";
   // Jangan kirim exception Google/Midtrans atau konfigurasi internal ke browser.
-  var safe = /^(Gunakan |Input |JSON |Silakan |Sesi |Akses |Action |ID atau password |Terlalu banyak |Webhook |Verifikasi pembayaran |Pembayaran tidak |Nominal pembayaran )/.test(message);
+  var safe = /^(Gunakan |Input |JSON |Silakan |Sesi |Akses |Action |ID atau password |Terlalu banyak |Webhook |Verifikasi pembayaran |Pembayaran tidak |Nominal pembayaran |Tidak ada tagihan |Tagihan |Invoice |Sheet |Pelanggan |Spreadsheet )/.test(message);
   return {success: false, message: safe ? message : "Permintaan gagal. Hubungi administrator."};
 }
 
@@ -766,6 +845,44 @@ function verifyMidtrans_(p) {
   p.payment_type = current.payment_type;
 }
 
+// Jalankan manual dari editor: diagnoseLogin("ID_PELANGGAN_CONTOH")
+// Versi tanpa argumen (untuk tombol Run): isi ID di sini.
+function diagnoseLoginContoh() {
+  return diagnoseLogin("ISI_ID_PELANGGAN_DI_SINI");
+}
+
+function diagnoseLogin(idPelanggan) {
+  var out = [];
+  var props = PropertiesService.getScriptProperties();
+  var sid = props.getProperty("SPREADSHEET_ID");
+  out.push("SPREADSHEET_ID: " + (sid ? "ada (" + sid.length + " karakter)" : "KOSONG -> pakai spreadsheet terikat: " + (getBoundSpreadsheetId_() ? "ADA" : "TIDAK ADA")));
+  out.push("ADMIN_PASSWORD: " + (props.getProperty("ADMIN_PASSWORD") ? "ada" : "KOSONG"));
+  out.push("MIDTRANS_SERVER_KEY: " + (props.getProperty("MIDTRANS_SERVER_KEY") ? "ada" : "KOSONG"));
+  try {
+    var ss = getSpreadsheet_();
+    out.push("Spreadsheet: " + ss.getName());
+    out.push("Daftar sheet: " + ss.getSheets().map(function(s){return s.getName();}).join(", "));
+    var sh = ss.getSheetByName(CONFIG.SHEETS.PELANGGAN);
+    if (!sh) { out.push(CONFIG.SHEETS.PELANGGAN + ": TIDAK ADA"); }
+    else {
+      var values = sh.getDataRange().getValues();
+      var h = values[0] || [];
+      out.push("Header: " + h.join(" | "));
+      out.push("Jumlah baris data: " + Math.max(0, values.length - 1));
+      var iId = h.indexOf("ID_Pelanggan"), iPw = h.indexOf("Password");
+      out.push("Kolom ID_Pelanggan=" + iId + ", Password=" + iPw);
+      if (idPelanggan && iId >= 0) {
+        var found = -1, r;
+        for (r = 1; r < values.length; r++) if (String(values[r][iId]) === String(idPelanggan)) { found = r; break; }
+        out.push("ID '" + idPelanggan + "': " + (found < 0 ? "TIDAK DITEMUKAN"
+          : "ditemukan baris " + (found + 1) + ", panjang password sel " + String(values[found][iPw]).length));
+      }
+    }
+  } catch (e) { out.push("ERROR buka spreadsheet: " + e.message); }
+  Logger.log(out.join("\n"));
+  return out.join("\n");
+}
+
 // Jalankan manual: diagnoseProperties()
 // Menampilkan semua scope properti + ID project, tanpa mencetak nilai.
 function diagnoseProperties() {
@@ -782,6 +899,27 @@ function diagnoseProperties() {
     }).join(", ") : "KOSONG"));
   });
   out.push("Spreadsheet aktif: " + (function(){ try { return SpreadsheetApp.getActiveSpreadsheet() ? "ada (bound)" : "tidak bound"; } catch(e) { return "error: " + e.message; } })());
+  Logger.log(out.join("\n"));
+  return out.join("\n");
+}
+
+// Jalankan manual untuk memeriksa kondisi siklus tagihan seorang pelanggan
+// tanpa mengubah data: tesSiklusTagihan("user1")
+function tesSiklusTagihan(idPelanggan) {
+  var out = [];
+  var now = new Date();
+  out.push("Hari ini: " + Utilities.formatDate(now, CONFIG.TIMEZONE, "yyyy-MM-dd") + " (tgl " + Utilities.formatDate(now, CONFIG.TIMEZONE, "d") + ")");
+  out.push("Jatuh tempo bulan ini: " + Utilities.formatDate(computeDueDate_(now), CONFIG.TIMEZONE, "yyyy-MM-dd"));
+  var unpaid = findLatestUnpaidInvoice_(idPelanggan);
+  out.push("Invoice belum lunas terbaru: " + (unpaid ? unpaid.Periode + " / " + unpaid.Status + " / " + unpaid.Order_ID : "TIDAK ADA (status LUNAS)"));
+  var settledKey = findLatestSettledPeriod_(idPelanggan);
+  out.push("Periode lunas terbaru: " + (settledKey !== null ? periodToString_(settledKey) : "-"));
+  var p = findPelangganById_(idPelanggan);
+  if (p) {
+    out.push("Status sistem: " + p.Status_Sistem + " | Harga: " + toNumber_(p.Harga));
+  } else {
+    out.push("Pelanggan tidak ditemukan.");
+  }
   Logger.log(out.join("\n"));
   return out.join("\n");
 }

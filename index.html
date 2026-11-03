@@ -9,17 +9,17 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #08111f;
-      --bg-soft: rgba(255, 255, 255, 0.06);
-      --panel: rgba(15, 23, 42, 0.72);
-      --line: rgba(255, 255, 255, 0.12);
-      --text: #edf2ff;
-      --muted: #b8c3e0;
-      --indigo: #6366f1;
-      --rose: #f43f5e;
+      --bg: #f5f4ef;
+      --bg-soft: #eeece5;
+      --panel: #fffefa;
+      --line: #dfddd4;
+      --text: #20251f;
+      --muted: #687064;
+      --indigo: #275c45;
+      --rose: #d9e6d8;
       --lime: #22c55e;
       --warning: #f59e0b;
-      --shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+      --shadow: 0 14px 36px rgba(35, 43, 35, 0.08);
     }
 
     * {
@@ -34,10 +34,7 @@
       margin: 0;
       font-family: "Plus Jakarta Sans", sans-serif;
       color: var(--text);
-      background:
-        radial-gradient(circle at top left, rgba(99, 102, 241, 0.22), transparent 28%),
-        radial-gradient(circle at top right, rgba(244, 63, 94, 0.2), transparent 30%),
-        linear-gradient(160deg, #040816 0%, #0b1324 45%, #111827 100%);
+      background: var(--bg);
       min-height: 100vh;
     }
 
@@ -53,9 +50,9 @@
 
     .navbar-wrap {
       position: sticky;
-      top: 16px;
+      top: 12px;
       z-index: 50;
-      padding-top: 16px;
+      padding-top: 12px;
     }
 
     .navbar {
@@ -65,9 +62,8 @@
       gap: 16px;
       padding: 14px 18px;
       border: 1px solid var(--line);
-      border-radius: 24px;
-      background: rgba(7, 11, 24, 0.56);
-      backdrop-filter: blur(16px);
+      border-radius: 20px;
+      background: var(--panel);
       box-shadow: var(--shadow);
     }
 
@@ -115,10 +111,10 @@
       justify-content: center;
       padding: 10px 16px;
       border-radius: 999px;
-      color: #fff;
+      color: var(--indigo);
       font-weight: 700;
-      background: linear-gradient(135deg, var(--indigo), var(--rose));
-      box-shadow: 0 12px 24px rgba(99, 102, 241, 0.22);
+      background: #e7eee5;
+      border: 1px solid #d6e1d4;
     }
 
     .hero {
@@ -126,7 +122,7 @@
       grid-template-columns: 1.1fr 0.9fr;
       gap: 28px;
       align-items: start;
-      padding: 72px 0 44px;
+      padding: 56px 0 44px;
     }
 
     .hero-copy h1 {
@@ -177,7 +173,7 @@
     }
 
     .hero-slider-content {
-      min-height: 520px;
+      min-height: 480px;
       display: flex;
       flex-direction: column;
     }
@@ -185,9 +181,9 @@
     .hero-visual {
       margin-top: 10px;
       padding: 22px;
-      border-radius: 24px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      background: rgba(255, 255, 255, 0.05);
+      border-radius: 20px;
+      border: 1px solid var(--line);
+      background: var(--bg-soft);
       min-height: 320px;
       display: flex;
       align-items: center;
@@ -216,8 +212,8 @@
 
     .button-primary {
       color: #fff;
-      background: linear-gradient(135deg, var(--indigo), var(--rose));
-      box-shadow: 0 14px 30px rgba(99, 102, 241, 0.25);
+      background: var(--indigo);
+      box-shadow: 0 10px 22px rgba(39, 92, 69, 0.18);
     }
 
     .button-secondary {

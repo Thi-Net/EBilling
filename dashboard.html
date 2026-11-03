@@ -3,47 +3,59 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard Pelanggan | Billing ThiNet</title>
+  <title>Dashboard Pelanggan | ThiNet</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="YOUR_CLIENT_KEY"></script>
   <style>
     :root {
-      --bg: #f4f7fb;
+      --primary: #3763EB;
+      --primary-2: #6F58E8;
+      --navy: #051441;
+      --soft: #EFF2F9;
+      --text: #0B1736;
+      --muted: #64748B;
+      --line: #E2E8F3;
       --surface: #ffffff;
-      --surface-soft: #eef3ff;
-      --text: #0f172a;
-      --muted: #64748b;
-      --line: #dbe4f0;
-      --primary: #4f46e5;
-      --rose: #f43f5e;
-      --green: #16a34a;
-      --amber: #d97706;
-      --danger: #dc2626;
-      --shadow: 0 18px 42px rgba(15, 23, 42, 0.08);
+      --green: #16A34A;
+      --amber: #B45309;
+      --danger: #DC2626;
+      --grad: linear-gradient(135deg, #3763EB 0%, #6F58E8 100%);
+      --shadow-sm: 0 4px 14px rgba(15, 32, 74, 0.06);
+      --shadow-md: 0 12px 32px rgba(15, 32, 74, 0.10);
+      --shadow-lg: 0 24px 60px rgba(15, 32, 74, 0.14);
+      --radius: 16px;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
-      font-family: "Plus Jakarta Sans", sans-serif;
-      background:
-        radial-gradient(circle at top right, rgba(79, 70, 229, 0.08), transparent 24%),
-        linear-gradient(180deg, #f7faff 0%, #f4f7fb 100%);
+      font-family: "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: #F6F8FC;
       color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
     }
 
+    a { color: inherit; text-decoration: none; }
+    button { font-family: inherit; }
+
     .container {
-      width: min(1180px, calc(100% - 32px));
+      width: min(1200px, calc(100% - 36px));
       margin: 0 auto;
     }
 
+    /* ---------- TOPBAR ---------- */
     .topbar {
-      padding: 22px 0;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(246, 248, 252, .88);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--line);
+      padding: 12px 0;
     }
 
     .topbar-inner {
@@ -51,341 +63,597 @@
       align-items: center;
       justify-content: space-between;
       gap: 16px;
-      padding: 16px 18px;
-      border-radius: 24px;
-      background: rgba(255, 255, 255, 0.9);
-      border: 1px solid rgba(219, 228, 240, 0.8);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(14px);
     }
 
-    .brand strong {
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      min-width: 0;
+    }
+
+    .brand-logo {
+      width: 42px; height: 42px;
+      border-radius: 11px;
+      background: var(--grad);
+      display: grid;
+      place-items: center;
+      color: #fff;
+      flex-shrink: 0;
+      box-shadow: 0 8px 20px rgba(55, 99, 235, .28);
+    }
+
+    .brand-text strong {
       display: block;
-      font-size: 1.05rem;
+      font-size: .95rem;
+      font-weight: 700;
+      line-height: 1.25;
+      letter-spacing: -.01em;
     }
 
-    .brand span {
+    .brand-text span {
+      display: block;
       color: var(--muted);
-      font-size: 0.92rem;
+      font-size: .76rem;
+      font-weight: 500;
+      line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 300px;
     }
+
+    .topbar-actions { display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
 
     .button {
       border: 0;
-      border-radius: 14px;
-      padding: 12px 18px;
-      font: inherit;
-      font-weight: 700;
+      border-radius: 9px;
+      padding: 11px 18px;
+      font-size: .855rem;
+      font-weight: 600;
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
     }
+
+    .button:hover { transform: translateY(-1px); }
+
+    .button svg { flex-shrink: 0; }
 
     .button-primary {
       color: #fff;
-      background: linear-gradient(135deg, var(--primary), #7c3aed);
+      background: var(--grad);
+      box-shadow: 0 10px 24px rgba(55, 99, 235, .24);
     }
 
+    .button-primary:hover { box-shadow: 0 14px 30px rgba(55, 99, 235, .34); }
+
     .button-secondary {
-      color: var(--text);
-      background: var(--surface-soft);
+      color: #334155;
+      background: #fff;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-sm);
     }
+
+    .button-secondary:hover { background: var(--soft); }
 
     .button-danger {
       color: #fff;
       background: var(--danger);
+      box-shadow: 0 8px 20px rgba(220, 38, 38, .22);
     }
+
+    /* ---------- PAGE ---------- */
+    .page-head {
+      padding: 34px 0 22px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .page-head h1 {
+      margin: 0 0 6px;
+      font-size: clamp(1.3rem, 2.4vw, 1.75rem);
+      font-weight: 700;
+      letter-spacing: -.02em;
+    }
+
+    .page-head p { margin: 0; color: var(--muted); font-size: .9rem; line-height: 1.6; }
 
     .layout {
       display: grid;
       grid-template-columns: 1.15fr 0.85fr;
-      gap: 20px;
-      padding-bottom: 36px;
+      gap: 22px;
+      padding-bottom: 44px;
     }
 
-    .stack {
-      display: grid;
-      gap: 20px;
-    }
+    .stack { display: grid; gap: 20px; align-content: start; }
 
     .card {
       background: var(--surface);
-      border-radius: 24px;
+      border-radius: var(--radius);
       border: 1px solid var(--line);
-      box-shadow: var(--shadow);
-      padding: 22px;
+      box-shadow: var(--shadow-sm);
+      padding: 24px;
     }
 
-    .hero {
+    .card h2, .card h3 {
+      margin: 0 0 6px;
+      font-size: 1.02rem;
+      font-weight: 700;
+      letter-spacing: -.01em;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .card h2 .ico, .card h3 .ico {
+      width: 34px; height: 34px;
+      border-radius: 10px;
+      background: rgba(55, 99, 235, .1);
+      color: var(--primary);
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+
+    .card-sub { margin: 0 0 18px; color: var(--muted); font-size: .82rem; line-height: 1.6; }
+
+    /* ---------- BILLING HERO ---------- */
+    .billing-hero {
+      position: relative;
+      overflow: hidden;
+      border-radius: var(--radius);
+      padding: 26px;
+      background: linear-gradient(135deg, #051441 0%, #0a2a6e 52%, #3763EB 100%);
+      color: #fff;
       display: flex;
       justify-content: space-between;
-      gap: 20px;
       align-items: center;
-      background: linear-gradient(135deg, #eef2ff, #fff1f2);
+      gap: 20px;
+      box-shadow: 0 20px 46px rgba(5, 20, 65, .28);
     }
 
-    .hero h1,
-    .card h2,
-    .card h3 {
-      margin-top: 0;
+    .billing-hero::before {
+      content: "";
+      position: absolute;
+      width: 340px; height: 340px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      top: -160px; right: -80px;
+      pointer-events: none;
     }
 
-    .hero p,
-    .muted,
-    .empty-state {
-      color: var(--muted);
+    .billing-hero::after {
+      content: "";
+      position: absolute;
+      width: 240px; height: 240px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.05);
+      bottom: -140px; left: -60px;
+      pointer-events: none;
+    }
+
+    .billing-hero > * { position: relative; z-index: 1; }
+
+    .billing-hero h1 {
+      margin: 0 0 8px;
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -.01em;
+    }
+
+    .billing-hero p {
+      margin: 0 0 14px;
+      color: rgba(255,255,255,.82);
+      font-size: .86rem;
       line-height: 1.7;
+      max-width: 46ch;
     }
 
+    .billing-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: stretch;
+      flex-shrink: 0;
+    }
+
+    .btn-white {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 22px;
+      border-radius: 9px;
+      border: 0;
+      background: #fff;
+      color: var(--primary);
+      font-weight: 600;
+      font-size: .88rem;
+      cursor: pointer;
+      transition: all .25s ease;
+      white-space: nowrap;
+    }
+
+    .btn-white:hover { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(0,0,0,.2); }
+
+    .btn-ghost-white {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 11px 20px;
+      border-radius: 9px;
+      border: 1.5px solid rgba(255,255,255,.55);
+      background: transparent;
+      color: #fff;
+      font-weight: 600;
+      font-size: .84rem;
+      cursor: pointer;
+      transition: all .25s ease;
+      white-space: nowrap;
+    }
+
+    .btn-ghost-white:hover { background: rgba(255,255,255,.12); }
+
+    /* ---------- STATUS PILL ---------- */
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: .78rem;
+    }
+
+    .status-pill::before {
+      content: "";
+      width: 7px; height: 7px;
+      border-radius: 999px;
+      background: currentColor;
+    }
+
+    .status-pill.active { color: #166534; background: #DCFCE7; }
+    .status-pill.isolated { color: var(--amber); background: #FEF3C7; }
+
+    /* ---------- METRICS ---------- */
     .metric-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 14px;
+      gap: 13px;
       margin-top: 16px;
     }
 
     .metric {
       padding: 16px;
-      border-radius: 18px;
-      background: #fff;
+      border-radius: 12px;
+      background: #F8FAFD;
       border: 1px solid var(--line);
+      transition: border-color .2s ease, box-shadow .2s ease;
     }
+
+    .metric:hover { border-color: rgba(55,99,235,.35); box-shadow: var(--shadow-sm); }
 
     .metric small {
       color: var(--muted);
       display: block;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
+      font-size: .74rem;
+      font-weight: 500;
     }
 
     .metric strong {
-      font-size: 1.25rem;
-    }
-
-    .status-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 14px;
-      border-radius: 999px;
+      font-size: .96rem;
       font-weight: 700;
-      font-size: 0.92rem;
-    }
-
-    .status-pill.active {
-      color: #166534;
-      background: #dcfce7;
-    }
-
-    .status-pill.isolated {
-      color: #92400e;
-      background: #fef3c7;
+      letter-spacing: -.01em;
+      word-break: break-word;
     }
 
     .info-row {
       display: flex;
       justify-content: space-between;
+      align-items: center;
       gap: 16px;
-      padding: 12px 0;
+      padding: 13px 0;
       border-bottom: 1px dashed var(--line);
+      font-size: .86rem;
     }
 
-    .info-row:last-child {
-      border-bottom: 0;
-      padding-bottom: 0;
+    .info-row span { color: var(--muted); }
+
+    .info-row strong {
+      font-weight: 600;
+      text-align: right;
+      font-size: .86rem;
     }
 
-    .history-list,
-    .broadcast-list {
+    .info-row:last-child { border-bottom: 0; padding-bottom: 0; }
+
+    /* ---------- LISTS ---------- */
+    .history-list, .broadcast-list {
       display: grid;
-      gap: 12px;
-      margin-top: 16px;
+      gap: 11px;
+      margin-top: 14px;
     }
 
-    .history-item,
-    .broadcast-item {
+    .history-item, .broadcast-item {
       padding: 14px 16px;
-      border-radius: 18px;
-      background: #f8fbff;
+      border-radius: 12px;
+      background: #F8FAFD;
       border: 1px solid var(--line);
+      font-size: .85rem;
+      line-height: 1.6;
     }
 
-    .form-group {
-      margin-bottom: 14px;
+    .history-item strong { font-size: .85rem; letter-spacing: -.01em; }
+    .history-item .muted { font-size: .78rem; }
+
+    .history-item .row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 8px;
+      align-items: center;
     }
+
+    .history-item .row strong { font-weight: 700; }
+
+    .amount {
+      font-weight: 700;
+      color: var(--primary);
+      font-size: .9rem;
+    }
+
+    .mini-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: .72rem;
+      font-weight: 600;
+    }
+
+    .mini-pill.paid { color: #166534; background: #DCFCE7; }
+    .mini-pill.pending { color: var(--amber); background: #FEF3C7; }
+    .mini-pill.failed { color: #991B1B; background: #FEE2E2; }
+    .mini-pill.other { color: #334155; background: #E2E8F0; }
+
+    .broadcast-item {
+      display: flex;
+      gap: 11px;
+      align-items: flex-start;
+    }
+
+    .broadcast-item .ico {
+      width: 30px; height: 30px;
+      border-radius: 9px;
+      background: rgba(55,99,235,.1);
+      color: var(--primary);
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .empty-state {
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: .85rem;
+      padding: 14px 0 4px;
+    }
+
+    /* ---------- FORM ---------- */
+    .form-group { margin-bottom: 14px; }
 
     .form-group label {
       display: block;
-      margin-bottom: 8px;
-      color: var(--muted);
-      font-size: 0.92rem;
+      margin-bottom: 7px;
+      color: #334155;
+      font-size: .8rem;
+      font-weight: 500;
     }
 
-    .form-group textarea,
-    .form-group input {
+    .form-group textarea, .form-group input {
       width: 100%;
-      padding: 14px 16px;
-      border-radius: 14px;
+      padding: 12px 15px;
+      border-radius: 10px;
       border: 1px solid var(--line);
-      background: #fff;
+      background: #F8FAFD;
       font: inherit;
+      font-size: .875rem;
       color: var(--text);
       outline: none;
+      transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
     }
 
-    .form-group textarea {
-      resize: vertical;
-      min-height: 120px;
-    }
+    .form-group textarea { resize: vertical; min-height: 120px; }
 
-    .form-group textarea:focus,
-    .form-group input:focus {
-      border-color: rgba(79, 70, 229, 0.6);
-      box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
-    }
-
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 16px;
+    .form-group textarea:focus, .form-group input:focus {
+      border-color: var(--primary);
+      background: #fff;
+      box-shadow: 0 0 0 4px rgba(55, 99, 235, .13);
     }
 
     .feedback {
-      min-height: 24px;
-      margin-top: 12px;
-      font-size: 0.92rem;
+      min-height: 20px;
+      margin-top: 11px;
+      font-size: .82rem;
       color: var(--muted);
+      line-height: 1.6;
     }
 
-    .feedback.error {
-      color: var(--danger);
-    }
+    .feedback.error { color: var(--danger); }
+    .feedback.success { color: var(--green); }
 
-    .feedback.success {
-      color: var(--green);
-    }
+    .muted { color: var(--muted); line-height: 1.7; font-size: .85rem; }
 
+    /* ---------- RESPONSIVE ---------- */
     @media (max-width: 980px) {
-      .layout {
-        grid-template-columns: 1fr;
-      }
-
-      .hero {
-        flex-direction: column;
-        align-items: flex-start;
-      }
+      .layout { grid-template-columns: 1fr; }
+      .billing-hero { flex-direction: column; align-items: flex-start; }
+      .billing-actions { flex-direction: row; flex-wrap: wrap; }
+      .btn-white, .btn-ghost-white { flex: 1; min-width: 140px; }
     }
 
     @media (max-width: 768px) {
-      .container {
-        width: min(100% - 20px, 1180px);
-      }
+      .container { width: calc(100% - 24px); }
+      .page-head { padding: 24px 0 16px; }
+      .metric-grid { grid-template-columns: 1fr; }
+      .card { padding: 19px; }
+      .billing-hero { padding: 20px; }
+      .brand-text span { max-width: 160px; }
+      .topbar-actions .button { padding: 10px 14px; font-size: .8rem; }
+      .button, .btn-white, .btn-ghost-white { width: 100%; }
+      .billing-actions .btn-ghost-white { width: auto; flex: 1; }
+      .btn-white { width: 100%; }
+      .info-row { flex-wrap: wrap; }
+      .info-row strong { text-align: left; }
+    }
 
-      .topbar-inner {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .metric-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .button {
-        width: 100%;
-      }
-
-      .card,
-      .topbar-inner {
-        padding: 18px;
-      }
-
-      body,
-      .muted,
-      .feedback {
-        font-size: 0.94rem;
-      }
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; }
     }
   </style>
 </head>
 <body>
-  <div class="container topbar">
-    <div class="topbar-inner">
+  <div class="topbar">
+    <div class="container topbar-inner">
       <div class="brand">
-        <strong>Dashboard Pelanggan</strong>
-        <span id="welcomeText">Memuat data pelanggan...</span>
+        <span class="brand-logo">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+        </span>
+        <div class="brand-text">
+          <strong>Dashboard Pelanggan</strong>
+          <span id="welcomeText">Memuat data pelanggan...</span>
+        </div>
       </div>
-      <button class="button button-danger" id="logoutButton" type="button">Logout</button>
+      <div class="topbar-actions">
+        <button class="button button-danger" id="logoutButton" type="button">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Logout
+        </button>
+      </div>
     </div>
   </div>
 
-  <main class="container layout">
-    <section class="stack">
-      <article class="card hero">
-        <div>
-          <h1>Tagihan internet Anda</h1>
-          <p id="heroMessage">Memuat Data</p>
-          <div id="systemStatus" class="status-pill">Memuat status...</div>
-        </div>
-        <div class="actions">
-          <button class="button button-primary" id="payButton" type="button">Bayar Sekarang</button>
-          <button class="button button-secondary" id="upgradeButton" type="button">Upgrade Paket</button>
-        </div>
-      </article>
+  <main class="container">
+    <div class="page-head">
+      <div>
+        <h1>Tagihan Internet Anda</h1>
+        <p>Pantau langganan, lakukan pembayaran, dan kirim keluhan dalam satu halaman.</p>
+      </div>
+      <div id="systemStatus" class="status-pill">Memuat status...</div>
+    </div>
 
-      <article class="card">
-        <h2>Informasi Langganan</h2>
-        <div class="metric-grid">
-          <div class="metric">
-            <small>Paket</small>
-            <strong id="paketValue">-</strong>
+    <div class="layout">
+      <section class="stack">
+        <article class="billing-hero">
+          <div>
+            <h1 id="heroTitleStatus">Status Langganan</h1>
+            <p id="heroMessage">Memuat data...</p>
           </div>
-          <div class="metric">
-            <small>Harga</small>
-            <strong id="hargaValue">-</strong>
+          <div class="billing-actions">
+            <button class="btn-white" id="payButton" type="button">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+              Bayar Sekarang
+            </button>
+            <button class="btn-ghost-white" id="upgradeButton" type="button">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 11 12 6 7 11"/><line x1="12" y1="18" x2="12" y2="6"/></svg>
+              Upgrade Paket
+            </button>
           </div>
-          <div class="metric">
-            <small>Jatuh Tempo</small>
-            <strong id="jatuhTempoValue">-</strong>
-          </div>
-        </div>
-        <div style="margin-top: 18px;">
-          <div class="info-row">
-            <span>Status Pembayaran</span>
-            <strong id="paymentStatusValue">-</strong>
-          </div>
-          <div class="info-row">
-            <span>Tanggal Pasang</span>
-            <strong id="installDateValue">-</strong>
-          </div>
-          <div class="info-row">
-            <span>Nomor WhatsApp</span>
-            <strong id="waValue">-</strong>
-          </div>
-        </div>
-      </article>
+        </article>
 
-      <article class="card">
-        <h2>Riwayat Pembayaran</h2>
-        <div id="historyList" class="history-list"></div>
-      </article>
-    </section>
-
-    <aside class="stack">
-      <article class="card">
-        <h3>Broadcast Informasi</h3>
-        <p class="muted">Pesan terbaru dari admin akan tampil di bawah ini.</p>
-        <div id="broadcastList" class="broadcast-list"></div>
-      </article>
-
-      <article class="card">
-        <h3>Kirim Keluhan</h3>
-        <form id="complaintForm">
-          <div class="form-group">
-            <label for="complaintMessage">Pesan Keluhan</label>
-            <textarea id="complaintMessage" placeholder="Tuliskan gangguan atau kebutuhan bantuan Anda..." required></textarea>
+        <article class="card">
+          <h2>
+            <span class="ico">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            </span>
+            Informasi Langganan
+          </h2>
+          <p class="card-sub">Detail paket dan status langganan Anda saat ini.</p>
+          <div class="metric-grid">
+            <div class="metric">
+              <small>Paket</small>
+              <strong id="paketValue">-</strong>
+            </div>
+            <div class="metric">
+              <small>Harga</small>
+              <strong id="hargaValue">-</strong>
+            </div>
+            <div class="metric">
+              <small>Jatuh Tempo</small>
+              <strong id="jatuhTempoValue">-</strong>
+            </div>
           </div>
-          <button class="button button-primary" type="submit">Kirim Keluhan</button>
-          <div id="complaintFeedback" class="feedback"></div>
-        </form>
-      </article>
-    </aside>
+          <div style="margin-top: 16px;">
+            <div class="info-row">
+              <span>Status Pembayaran</span>
+              <strong id="paymentStatusValue">-</strong>
+            </div>
+            <div class="info-row">
+              <span>Tanggal Pasang</span>
+              <strong id="installDateValue">-</strong>
+            </div>
+            <div class="info-row">
+              <span>Nomor WhatsApp</span>
+              <strong id="waValue">-</strong>
+            </div>
+          </div>
+        </article>
+
+        <article class="card">
+          <h2>
+            <span class="ico">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h18"/><path d="M5 6h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"/><path d="M7 15h3"/></svg>
+            </span>
+            Riwayat Pembayaran
+          </h2>
+          <p class="card-sub">Semua transaksi tagihan yang pernah Anda lakukan.</p>
+          <div id="historyList" class="history-list"></div>
+        </article>
+      </section>
+
+      <aside class="stack">
+        <article class="card">
+          <h3>
+            <span class="ico">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            </span>
+            Broadcast Informasi
+          </h3>
+          <p class="card-sub">Pesan terbaru dari admin akan tampil di bawah ini.</p>
+          <div id="broadcastList" class="broadcast-list"></div>
+        </article>
+
+        <article class="card">
+          <h3>
+            <span class="ico">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </span>
+            Kirim Keluhan
+          </h3>
+          <p class="card-sub">Sampaikan gangguan atau kebutuhan bantuan — tiket otomatis dibuat.</p>
+          <form id="complaintForm">
+            <div class="form-group">
+              <label for="complaintMessage">Pesan Keluhan</label>
+              <textarea id="complaintMessage" placeholder="Tuliskan gangguan atau kebutuhan bantuan Anda..." required></textarea>
+            </div>
+            <button class="button button-primary" type="submit">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              Kirim Keluhan
+            </button>
+            <div id="complaintFeedback" class="feedback"></div>
+          </form>
+        </article>
+      </aside>
+    </div>
   </main>
 
   <script>
@@ -414,6 +682,7 @@
     const el = {
       welcomeText: document.getElementById("welcomeText"),
       heroMessage: document.getElementById("heroMessage"),
+      heroTitleStatus: document.getElementById("heroTitleStatus"),
       systemStatus: document.getElementById("systemStatus"),
       paketValue: document.getElementById("paketValue"),
       hargaValue: document.getElementById("hargaValue"),
@@ -455,14 +724,18 @@
       element.className = "feedback" + (type ? " " + type : "");
     }
 
-
-
-
-
     function escapeHtml(value) {
       return String(value ?? "").replace(/[&<>"']/g, (char) => ({
         "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
       })[char]);
+    }
+
+    function statusPillClass(status) {
+      const s = String(status || "").toUpperCase();
+      if (["LUNAS", "PAID", "SETTLEMENT", "SUCCESS", "BERHASIL", "SELESAI"].includes(s)) return "paid";
+      if (["PENDING", "MENUNGGU", "BELUM DIBAYAR", "UNPAID"].includes(s)) return "pending";
+      if (["GAGAL", "EXPIRE", "EXPIRED", "DENY", "CANCEL"].includes(s)) return "failed";
+      return "other";
     }
 
     async function postJson(payload) {
@@ -487,6 +760,9 @@
       const isActive = String(status || "").toUpperCase() === "AKTIF";
       el.systemStatus.textContent = isActive ? "AKTIF" : "TERISOLIR";
       el.systemStatus.className = "status-pill " + (isActive ? "active" : "isolated");
+      if (el.heroTitleStatus) {
+        el.heroTitleStatus.textContent = isActive ? "Langganan Anda Aktif" : "Langganan Terisolir";
+      }
     }
 
     function renderHistory(items) {
@@ -499,9 +775,9 @@
         <div class="history-item">
           <strong>${escapeHtml(item.orderId)}</strong>
           <div class="muted">${escapeHtml(formatDate(item.tgl))} • ${escapeHtml(item.metode)}</div>
-          <div style="display:flex;justify-content:space-between;gap:12px;margin-top:8px;">
-            <span>Status: <strong>${escapeHtml(item.status)}</strong></span>
-            <strong>${formatCurrency(item.nominal)}</strong>
+          <div class="row">
+            <span class="mini-pill ${statusPillClass(item.status)}">${escapeHtml(item.status)}</span>
+            <strong class="amount">${formatCurrency(item.nominal)}</strong>
           </div>
         </div>
       `).join("");
@@ -514,7 +790,12 @@
       }
 
       el.broadcastList.innerHTML = items.map((item) => `
-        <div class="broadcast-item">${escapeHtml(item.pesan)}</div>
+        <div class="broadcast-item">
+          <span class="ico">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 22 2 13 21 11 13 3 11z"/></svg>
+          </span>
+          <span>${escapeHtml(item.pesan)}</span>
+        </div>
       `).join("");
     }
 

@@ -3,131 +3,282 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard Admin | Billing RTRW NET</title>
+  <title>Dashboard Admin | ThiNet</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #f3f6fb;
+      --primary: #3763EB;
+      --primary-2: #6F58E8;
+      --navy: #051441;
+      --soft: #EFF2F9;
+      --text: #0B1736;
+      --muted: #64748B;
+      --line: #E2E8F3;
       --surface: #ffffff;
-      --surface-soft: #eef2ff;
-      --text: #0f172a;
-      --muted: #64748b;
-      --line: #dbe4f0;
-      --indigo: #4f46e5;
-      --rose: #e11d48;
-      --green: #16a34a;
-      --amber: #d97706;
-      --shadow: 0 18px 42px rgba(15, 23, 42, 0.08);
+      --green: #16A34A;
+      --amber: #B45309;
+      --danger: #DC2626;
+      --grad: linear-gradient(135deg, #3763EB 0%, #6F58E8 100%);
+      --shadow-sm: 0 4px 14px rgba(15, 32, 74, 0.06);
+      --shadow-md: 0 12px 32px rgba(15, 32, 74, 0.10);
+      --shadow-lg: 0 24px 60px rgba(15, 32, 74, 0.14);
+      --radius: 16px;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
-      font-family: "Plus Jakarta Sans", sans-serif;
+      font-family: "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: #F6F8FC;
       color: var(--text);
-      background:
-        radial-gradient(circle at top left, rgba(79, 70, 229, 0.08), transparent 26%),
-        linear-gradient(180deg, #f8fbff 0%, #f3f6fb 100%);
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
     }
 
+    a { color: inherit; text-decoration: none; }
+    button { font-family: inherit; }
+
     .container {
-      width: min(1280px, calc(100% - 32px));
+      width: min(1280px, calc(100% - 36px));
       margin: 0 auto;
     }
 
+    /* ---------- TOPBAR ---------- */
     .topbar {
-      padding: 22px 0;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: linear-gradient(135deg, #051441 0%, #0a2a6e 52%, #3763EB 100%);
+      padding: 14px 0;
+      box-shadow: 0 10px 30px rgba(5, 20, 65, .22);
     }
 
     .topbar-inner {
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      justify-content: space-between;
       gap: 16px;
-      padding: 18px 20px;
-      border-radius: 24px;
-      background: rgba(255, 255, 255, 0.92);
-      border: 1px solid var(--line);
-      box-shadow: var(--shadow);
     }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      color: #fff;
+      min-width: 0;
+    }
+
+    .brand-logo {
+      width: 42px; height: 42px;
+      border-radius: 11px;
+      background: rgba(255,255,255,.14);
+      border: 1px solid rgba(255,255,255,.22);
+      display: grid;
+      place-items: center;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .brand-text strong {
+      display: block;
+      font-size: .95rem;
+      font-weight: 700;
+      line-height: 1.25;
+      letter-spacing: -.01em;
+    }
+
+    .brand-text span {
+      display: block;
+      color: rgba(255,255,255,.72);
+      font-size: .76rem;
+      font-weight: 500;
+      line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 320px;
+    }
+
+    .topbar-actions { display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
 
     .button {
       border: 0;
-      border-radius: 14px;
-      padding: 12px 18px;
-      font: inherit;
-      font-weight: 700;
+      border-radius: 9px;
+      padding: 11px 18px;
+      font-size: .855rem;
+      font-weight: 600;
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
     }
+
+    .button:hover { transform: translateY(-1px); }
+    .button svg { flex-shrink: 0; }
 
     .button-primary {
       color: #fff;
-      background: linear-gradient(135deg, var(--indigo), #7c3aed);
+      background: var(--grad);
+      box-shadow: 0 10px 24px rgba(55, 99, 235, .24);
     }
 
     .button-secondary {
-      background: var(--surface-soft);
-      color: var(--text);
+      color: #fff;
+      background: rgba(255,255,255,.14);
+      border: 1px solid rgba(255,255,255,.3);
     }
+
+    .button-secondary:hover { background: rgba(255,255,255,.22); }
 
     .button-success {
       color: #fff;
       background: var(--green);
+      box-shadow: 0 8px 20px rgba(22, 163, 74, .22);
     }
 
     .button-danger {
       color: #fff;
-      background: var(--rose);
+      background: var(--danger);
+      box-shadow: 0 8px 20px rgba(220, 38, 38, .22);
     }
+
+    /* ---------- PAGE ---------- */
+    .page-head {
+      padding: 32px 0 20px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .page-head h1 {
+      margin: 0 0 6px;
+      font-size: clamp(1.3rem, 2.4vw, 1.75rem);
+      font-weight: 700;
+      letter-spacing: -.02em;
+    }
+
+    .page-head p { margin: 0; color: var(--muted); font-size: .9rem; line-height: 1.6; }
 
     .dashboard {
       display: grid;
-      gap: 20px;
-      padding-bottom: 36px;
+      gap: 22px;
+      padding-bottom: 44px;
     }
 
+    /* ---------- STATS ---------- */
     .stats {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 18px;
     }
 
-    .card {
-      background: var(--surface);
-      border-radius: 24px;
-      border: 1px solid var(--line);
-      box-shadow: var(--shadow);
-      padding: 22px;
-    }
-
     .stat-card {
-      background: linear-gradient(180deg, #fff, #f8fbff);
+      position: relative;
+      overflow: hidden;
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-sm);
+      padding: 22px;
+      transition: transform .25s ease, box-shadow .25s ease;
     }
 
-    .stat-card small {
-      color: var(--muted);
-      display: block;
-      margin-bottom: 10px;
+    .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+
+    .stat-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--grad);
     }
+
+    .stat-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .stat-head small {
+      color: var(--muted);
+      font-size: .8rem;
+      font-weight: 500;
+    }
+
+    .stat-ico {
+      width: 38px; height: 38px;
+      border-radius: 11px;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+
+    .stat-ico.blue { background: rgba(55,99,235,.1); color: var(--primary); }
+    .stat-ico.green { background: rgba(22,163,74,.12); color: var(--green); }
+    .stat-ico.amber { background: #FEF3C7; color: var(--amber); }
 
     .stat-card strong {
       font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -.03em;
+      background: var(--grad);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
+
+    /* ---------- CARDS ---------- */
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-sm);
+      padding: 24px;
+    }
+
+    .card h2 {
+      margin: 0 0 6px;
+      font-size: 1.02rem;
+      font-weight: 700;
+      letter-spacing: -.01em;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .card h2 .ico {
+      width: 34px; height: 34px;
+      border-radius: 10px;
+      background: rgba(55, 99, 235, .1);
+      color: var(--primary);
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+
+    .card-sub { margin: 0 0 18px; color: var(--muted); font-size: .82rem; line-height: 1.6; }
 
     .grid-2 {
       display: grid;
-      grid-template-columns: 1.25fr 0.75fr;
-      gap: 20px;
+      grid-template-columns: 1.6fr 0.9fr;
+      gap: 22px;
+      align-items: start;
     }
 
+    /* ---------- TABLE ---------- */
     .table-wrap {
       overflow-x: auto;
-      margin-top: 18px;
+      margin-top: 4px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
     }
 
     table {
@@ -136,236 +287,287 @@
       min-width: 980px;
     }
 
-    th,
-    td {
+    th, td {
       padding: 12px 14px;
       border-bottom: 1px solid var(--line);
       text-align: left;
-      font-size: 0.94rem;
+      font-size: .84rem;
       vertical-align: top;
     }
 
     th {
       color: var(--muted);
-      font-weight: 700;
-      background: #f8fbff;
+      font-weight: 600;
+      font-size: .76rem;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      background: #F8FAFD;
+      position: sticky;
+      top: 0;
     }
 
+    tbody tr { transition: background .15s ease; }
+    tbody tr:hover { background: #F8FAFD; }
+    tbody tr:last-child td { border-bottom: 0; }
+
+    td strong { font-weight: 600; }
+
+    /* ---------- PILLS ---------- */
     .pill {
       display: inline-flex;
       align-items: center;
-      padding: 8px 12px;
+      gap: 6px;
+      padding: 5px 11px;
       border-radius: 999px;
-      font-size: 0.85rem;
-      font-weight: 700;
+      font-size: .74rem;
+      font-weight: 600;
+      white-space: nowrap;
     }
 
-    .pill.active {
-      color: #166534;
-      background: #dcfce7;
+    .pill::before {
+      content: "";
+      width: 6px; height: 6px;
+      border-radius: 999px;
+      background: currentColor;
     }
 
-    .pill.isolated {
-      color: #92400e;
-      background: #fef3c7;
-    }
+    .pill.active { color: #166534; background: #DCFCE7; }
+    .pill.isolated { color: var(--amber); background: #FEF3C7; }
+    .pill.open { color: #991B1B; background: #FEE2E2; }
+    .pill.done { color: #166534; background: #DCFCE7; }
+    .pill.paid { color: #166534; background: #DCFCE7; }
+    .pill.pending { color: var(--amber); background: #FEF3C7; }
+    .pill.other { color: #334155; background: #E2E8F0; }
 
-    .pill.open {
-      color: #991b1b;
-      background: #fee2e2;
-    }
+    .muted { color: var(--muted); line-height: 1.7; font-size: .85rem; }
+    .empty-state { color: var(--muted); line-height: 1.7; font-size: .85rem; padding: 12px; }
 
-    .pill.done {
-      color: #166534;
-      background: #dcfce7;
-    }
-
-    .muted {
-      color: var(--muted);
-      line-height: 1.7;
-    }
-
-    .form-group {
-      margin-bottom: 14px;
-    }
+    /* ---------- FORM ---------- */
+    .form-group { margin-bottom: 14px; }
 
     .form-group label {
       display: block;
-      margin-bottom: 8px;
-      color: var(--muted);
-      font-size: 0.92rem;
+      margin-bottom: 7px;
+      color: #334155;
+      font-size: .8rem;
+      font-weight: 500;
     }
 
     .form-group textarea {
       width: 100%;
-      min-height: 120px;
-      padding: 14px 16px;
-      border-radius: 14px;
+      min-height: 130px;
+      padding: 12px 15px;
+      border-radius: 10px;
       border: 1px solid var(--line);
+      background: #F8FAFD;
       font: inherit;
+      font-size: .875rem;
       color: var(--text);
       resize: vertical;
       outline: none;
+      transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
     }
 
     .form-group textarea:focus {
-      border-color: rgba(79, 70, 229, 0.6);
-      box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
+      border-color: var(--primary);
+      background: #fff;
+      box-shadow: 0 0 0 4px rgba(55, 99, 235, .13);
     }
 
     .feedback {
-      min-height: 24px;
-      margin-top: 12px;
-      font-size: 0.92rem;
+      min-height: 20px;
+      margin-top: 11px;
+      font-size: .82rem;
       color: var(--muted);
+      line-height: 1.6;
     }
 
-    .feedback.success {
-      color: var(--green);
-    }
+    .feedback.success { color: var(--green); }
+    .feedback.error { color: var(--danger); }
 
-    .feedback.error {
-      color: var(--rose);
-    }
-
+    /* ---------- TICKETS ---------- */
     .ticket-list {
       display: grid;
-      gap: 14px;
-      margin-top: 18px;
+      gap: 13px;
+      margin-top: 14px;
     }
 
     .ticket {
-      padding: 16px;
-      border-radius: 18px;
-      background: #f8fbff;
+      padding: 16px 18px;
+      border-radius: 12px;
+      background: #F8FAFD;
       border: 1px solid var(--line);
+      transition: border-color .2s ease;
     }
+
+    .ticket:hover { border-color: rgba(55,99,235,.3); }
 
     .ticket-header {
       display: flex;
       justify-content: space-between;
       gap: 12px;
       align-items: flex-start;
-      margin-bottom: 10px;
+      margin-bottom: 9px;
+      flex-wrap: wrap;
     }
 
-    .empty-state {
-      color: var(--muted);
-      line-height: 1.7;
-    }
+    .ticket-header strong { font-size: .88rem; letter-spacing: -.01em; }
+    .ticket-header .muted { font-size: .76rem; }
 
+    .ticket p { margin: 0 0 14px; line-height: 1.7; font-size: .85rem; color: #334155; }
+
+    /* ---------- RESPONSIVE ---------- */
     @media (max-width: 1100px) {
-      .grid-2 {
-        grid-template-columns: 1fr;
-      }
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 900px) {
+      .stats { grid-template-columns: 1fr; gap: 13px; }
     }
 
     @media (max-width: 768px) {
-      .container {
-        width: min(100% - 20px, 1280px);
-      }
+      .container { width: calc(100% - 24px); }
+      .page-head { padding: 22px 0 14px; }
+      .card { padding: 19px; }
+      .stat-card { padding: 18px; }
+      .stat-card strong { font-size: 1.6rem; }
+      .brand-text span { max-width: 150px; }
+      .topbar-actions .button { padding: 10px 13px; font-size: .8rem; }
+      .button { width: 100%; justify-content: center; }
+      .topbar-actions { width: 100%; }
+      .topbar-inner { flex-wrap: wrap; }
+      .ticket-header { flex-direction: column; }
+    }
 
-      .stats {
-        grid-template-columns: 1fr;
-      }
-
-      .topbar-inner {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .grid-2 {
-        grid-template-columns: 1fr;
-      }
-
-      .button {
-        width: 100%;
-      }
-
-      .card,
-      .topbar-inner {
-        padding: 18px;
-      }
-
-      body,
-      .muted,
-      .feedback {
-        font-size: 0.94rem;
-      }
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; }
     }
   </style>
 </head>
 <body>
-  <div class="container topbar">
-    <div class="topbar-inner">
-      <div>
-        <strong style="display:block;font-size:1.1rem;">Dashboard Admin Billing RTRW NET</strong>
-        <span id="adminWelcome" class="muted">Memuat data admin...</span>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <span class="brand-logo">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 7v10l9 5 9-5V7l-9-5z"/><path d="M12 22V12"/><path d="m3.3 7 8.7 5 8.7-5"/></svg>
+        </span>
+        <div class="brand-text">
+          <strong>Dashboard Admin</strong>
+          <span id="adminWelcome">Memuat data admin...</span>
+        </div>
       </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <button class="button button-secondary" id="refreshButton" type="button">Refresh</button>
-        <button class="button button-danger" id="logoutButton" type="button">Logout</button>
+      <div class="topbar-actions">
+        <button class="button button-secondary" id="refreshButton" type="button">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          Refresh
+        </button>
+        <button class="button button-danger" id="logoutButton" type="button">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Logout
+        </button>
       </div>
     </div>
   </div>
 
-  <main class="container dashboard">
-    <section class="stats">
-      <article class="card stat-card">
-        <small>Total Pelanggan</small>
-        <strong id="totalPelangganValue">0</strong>
-      </article>
-      <article class="card stat-card">
-        <small>Pelanggan Aktif</small>
-        <strong id="totalAktifValue">0</strong>
-      </article>
-      <article class="card stat-card">
-        <small>Pelanggan Terisolir</small>
-        <strong id="totalIsolirValue">0</strong>
-      </article>
-    </section>
+  <main class="container">
+    <div class="page-head">
+      <div>
+        <h1>Kelola Pelanggan &amp; Layanan</h1>
+        <p>Ringkasan pelanggan, tagihan, broadcast informasi, dan tiket keluhan.</p>
+      </div>
+    </div>
 
-    <section class="grid-2">
-      <article class="card">
-        <h2>Data Pelanggan</h2>
-        <p class="muted">Tabel ini mengambil semua data dari sheet `Data_Pelanggan`.</p>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Nama</th>
-                <th>Paket</th>
-                <th>Harga</th>
-                <th>Status Sistem</th>
-                <th>Jatuh Tempo</th>
-                <th>Status Bayar</th>
-                <th>WhatsApp</th>
-              </tr>
-            </thead>
-            <tbody id="customerTableBody"></tbody>
-          </table>
-        </div>
-      </article>
-
-      <aside class="card">
-        <h2>Broadcast Informasi</h2>
-        <p class="muted">Pesan akan disimpan ke sheet `Data_Informasi` dan muncul di dashboard pelanggan.</p>
-        <form id="broadcastForm">
-          <div class="form-group">
-            <label for="broadcastMessage">Pesan Broadcast</label>
-            <textarea id="broadcastMessage" placeholder="Contoh: Maintenance jaringan malam ini pukul 23.00 sampai 01.00 WIB." required></textarea>
+    <section class="dashboard">
+      <div class="stats">
+        <article class="stat-card">
+          <div class="stat-head">
+            <small>Total Pelanggan</small>
+            <span class="stat-ico blue">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </span>
           </div>
-          <button class="button button-primary" type="submit">Simpan Broadcast</button>
-          <div id="broadcastFeedback" class="feedback"></div>
-        </form>
-      </aside>
-    </section>
+          <strong id="totalPelangganValue">0</strong>
+        </article>
+        <article class="stat-card">
+          <div class="stat-head">
+            <small>Pelanggan Aktif</small>
+            <span class="stat-ico green">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </span>
+          </div>
+          <strong id="totalAktifValue">0</strong>
+        </article>
+        <article class="stat-card">
+          <div class="stat-head">
+            <small>Pelanggan Terisolir</small>
+            <span class="stat-ico amber">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </span>
+          </div>
+          <strong id="totalIsolirValue">0</strong>
+        </article>
+      </div>
 
-    <section class="card">
-      <h2>Keluhan Pelanggan</h2>
-      <p class="muted">Admin bisa menandai tiket sebagai selesai setelah gangguan ditangani.</p>
-      <div id="ticketList" class="ticket-list"></div>
+      <section class="grid-2">
+        <article class="card">
+          <h2>
+            <span class="ico">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </span>
+            Data Pelanggan
+          </h2>
+          <p class="card-sub">Tabel ini mengambil semua data dari sheet <code>Data_Pelanggan</code>.</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nama</th>
+                  <th>Paket</th>
+                  <th>Harga</th>
+                  <th>Status Sistem</th>
+                  <th>Jatuh Tempo</th>
+                  <th>Status Bayar</th>
+                  <th>WhatsApp</th>
+                </tr>
+              </thead>
+              <tbody id="customerTableBody"></tbody>
+            </table>
+          </div>
+        </article>
+
+        <aside class="card">
+          <h2>
+            <span class="ico">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 22 2 13 21 11 13 3 11z"/></svg>
+            </span>
+            Broadcast Informasi
+          </h2>
+          <p class="card-sub">Pesan akan disimpan ke sheet <code>Data_Informasi</code> dan muncul di dashboard pelanggan.</p>
+          <form id="broadcastForm">
+            <div class="form-group">
+              <label for="broadcastMessage">Pesan Broadcast</label>
+              <textarea id="broadcastMessage" placeholder="Contoh: Maintenance jaringan malam ini pukul 23.00 sampai 01.00 WIB." required></textarea>
+            </div>
+            <button class="button button-primary" type="submit">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Simpan Broadcast
+            </button>
+            <div id="broadcastFeedback" class="feedback"></div>
+          </form>
+        </aside>
+      </section>
+
+      <section class="card">
+        <h2>
+          <span class="ico">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </span>
+          Keluhan Pelanggan
+        </h2>
+        <p class="card-sub">Admin bisa menandai tiket sebagai selesai setelah gangguan ditangani.</p>
+        <div id="ticketList" class="ticket-list"></div>
+      </section>
     </section>
   </main>
 
@@ -416,14 +618,18 @@
       }).format(date);
     }
 
-
-
-
-
     function escapeHtml(value) {
       return String(value ?? "").replace(/[&<>"']/g, (char) => ({
         "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
       })[char]);
+    }
+
+    function payPillClass(status) {
+      const s = String(status || "").toUpperCase();
+      if (["LUNAS", "PAID", "SETTLEMENT", "SUCCESS", "BERHASIL"].includes(s)) return "paid";
+      if (["PENDING", "MENUNGGU", "BELUM DIBAYAR", "UNPAID"].includes(s)) return "pending";
+      if (["GAGAL", "EXPIRE", "EXPIRED", "CANCEL"].includes(s)) return "open";
+      return "other";
     }
 
     async function postJson(payload) {
@@ -459,13 +665,13 @@
         const systemClass = String(customer.statusSistem || "").toUpperCase() === "AKTIF" ? "active" : "isolated";
         return `
           <tr>
-            <td>${escapeHtml(customer.id)}</td>
+            <td><strong>${escapeHtml(customer.id)}</strong></td>
             <td>${escapeHtml(customer.nama)}</td>
             <td>${escapeHtml(customer.paket)}</td>
             <td>${formatCurrency(customer.harga)}</td>
             <td><span class="pill ${systemClass}">${escapeHtml(customer.statusSistem)}</span></td>
             <td>${escapeHtml(formatDate(customer.tglJatuhTempo))}</td>
-            <td>${escapeHtml(customer.statusPembayaran)}</td>
+            <td><span class="pill ${payPillClass(customer.statusPembayaran)}">${escapeHtml(customer.statusPembayaran)}</span></td>
             <td>${escapeHtml(customer.noWhatsApp || "-")}</td>
           </tr>
         `;
@@ -489,8 +695,10 @@
               </div>
               <span class="pill ${done ? "done" : "open"}">${escapeHtml(ticket.status)}</span>
             </div>
-            <p style="margin:0 0 14px;line-height:1.7;">${escapeHtml(ticket.pesan)}</p>
-            ${done ? "" : `<button class="button button-success" type="button" data-ticket="${escapeHtml(ticket.idTiket)}">Selesai</button>`}
+            <p>${escapeHtml(ticket.pesan)}</p>
+            ${done ? "" : `<button class="button button-success" type="button" data-ticket="${escapeHtml(ticket.idTiket)}">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Tandai Selesai</button>`}
           </article>
         `;
       }).join("");

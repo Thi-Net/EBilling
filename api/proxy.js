@@ -47,6 +47,11 @@ export default async function handler(req, res) {
   try {
     const result = await handleAction(body);
     if (!isAction && !result.success) {
+      // Signature tidak valid = bukan notifikasi dari Midtrans (mis. tombol "Test
+      // Notification" di dashboard) → cukup 200 agar Midtrans tidak mengulang.
+      if (String(result.message) === "Webhook tidak valid.") {
+        return res.status(200).json(result);
+      }
       res.setHeader("Retry-After", "30");
       return res.status(502).json(result);
     }

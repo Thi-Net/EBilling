@@ -103,7 +103,7 @@ function requiredText(v, max) {
   if (typeof v !== "string" || !v.trim() || v.length > max) throw new Error("Input tidak valid.");
   return v.trim();
 }
-function errorResponse(error) {
+export function errorResponse(error) {
   const message = error && error.message ? error.message : "";
   const safe = /^(Gunakan |Input |JSON |Silakan |Sesi |Akses |Action |ID atau password |Terlalu banyak |Webhook |Verifikasi pembayaran |Pembayaran tidak |Nominal pembayaran |Tidak ada tagihan |Tagihan |Invoice |Pelanggan )/.test(message);
   return { success: false, message: safe ? message : "Permintaan gagal. Hubungi administrator." };

@@ -588,32 +588,7 @@
 
     <!-- ======== TAB KELOLA DATA PELANGGAN ======== -->
     <div id="panelKelola" class="tab-panel">
-      <article class="card">
-          <h2>
-            <span class="ico">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            </span>
-            Data Pelanggan
-          </h2>
-          <p class="card-sub">Tabel ini mengambil semua data dari sheet <code>Data_Pelanggan</code>.</p>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Nama</th>
-                  <th>Paket</th>
-                  <th>Harga</th>
-                  <th>Status Sistem</th>
-                  <th>Jatuh Tempo</th>
-                  <th>Status Bayar</th>
-                  <th>WhatsApp</th>
-                </tr>
-              </thead>
-              <tbody id="customerTableBody"></tbody>
-            </table>
-          </div>
-        </article>
+      
 
         
 
@@ -632,7 +607,7 @@
           <table>
             <thead>
               <tr>
-                <th>ID</th><th>Nama</th><th>Paket</th><th>Harga</th><th>Status</th><th>WhatsApp</th><th>Aksi</th>
+                <th>ID</th><th>Nama</th><th>Paket</th><th>Harga</th><th>Status</th><th>Bayar</th><th>WhatsApp</th><th>Aksi</th>
               </tr>
             </thead>
             <tbody id="crudTableBody"></tbody>
@@ -712,7 +687,6 @@
       totalPelangganValue: document.getElementById("totalPelangganValue"),
       totalAktifValue: document.getElementById("totalAktifValue"),
       totalIsolirValue: document.getElementById("totalIsolirValue"),
-      customerTableBody: document.getElementById("customerTableBody"),
       ticketList: document.getElementById("ticketList"),
       broadcastForm: document.getElementById("broadcastForm"),
       broadcastMessage: document.getElementById("broadcastMessage"),
@@ -777,29 +751,6 @@
       el.broadcastFeedback.className = "feedback" + (type ? " " + type : "");
     }
 
-    function renderCustomers(customers) {
-      if (!customers.length) {
-        el.customerTableBody.innerHTML = '<tr><td colspan="8" class="empty-state">Belum ada data pelanggan.</td></tr>';
-        return;
-      }
-
-      el.customerTableBody.innerHTML = customers.map((customer) => {
-        const systemClass = String(customer.statusSistem || "").toUpperCase() === "AKTIF" ? "active" : "isolated";
-        return `
-          <tr>
-            <td><strong>${escapeHtml(customer.id)}</strong></td>
-            <td>${escapeHtml(customer.nama)}</td>
-            <td>${escapeHtml(customer.paket)}</td>
-            <td>${formatCurrency(customer.harga)}</td>
-            <td><span class="pill ${systemClass}">${escapeHtml(customer.statusSistem)}</span></td>
-            <td>${escapeHtml(formatDate(customer.tglJatuhTempo))}</td>
-            <td><span class="pill ${payPillClass(customer.statusPembayaran)}">${escapeHtml(customer.statusPembayaran)}</span></td>
-            <td>${escapeHtml(customer.noWhatsApp || "-")}</td>
-          </tr>
-        `;
-      }).join("");
-    }
-
     function renderTickets(tickets) {
       if (!tickets.length) {
         el.ticketList.innerHTML = '<div class="empty-state">Belum ada tiket keluhan.</div>';
@@ -845,7 +796,6 @@
       el.totalPelangganValue.textContent = data.statistik.totalPelanggan;
       el.totalAktifValue.textContent = data.statistik.aktif;
       el.totalIsolirValue.textContent = data.statistik.terisolir;
-      renderCustomers(data.pelanggan || []);
       renderTickets(data.keluhan || []);
     }
 
@@ -1018,7 +968,7 @@
         const data = await crudCall({ mode: "list" });
         const items = data.pelanggan || [];
         if (!items.length) {
-          crud.tableBody.innerHTML = '<tr><td colspan="7" class="empty-state">Belum ada pelanggan.</td></tr>';
+          crud.tableBody.innerHTML = '<tr><td colspan="8" class="empty-state">Belum ada pelanggan.</td></tr>';
           return;
         }
         crud.tableBody.innerHTML = items.map((c) => `
@@ -1028,6 +978,7 @@
             <td>${escapeHtml(c.paket)}</td>
             <td>${formatCurrency(c.harga)}</td>
             <td><span class="pill ${String(c.statusSistem).toUpperCase() === "AKTIF" ? "active" : "isolated"}">${escapeHtml(c.statusSistem)}</span></td>
+            <td><span class="pill ${payPillClass(c.statusPembayaran)}">${escapeHtml(c.statusPembayaran || "-")}</span></td>
             <td>${escapeHtml(c.noWhatsApp || "-")}</td>
             <td class="crud-row-actions">
               <button type="button" class="crud-btn-edit" data-edit="${escapeHtml(c.id)}">Edit</button>
@@ -1035,7 +986,7 @@
             </td>
           </tr>`).join("");
       } catch (error) {
-        crud.tableBody.innerHTML = `<tr><td colspan="7" class="empty-state">${escapeHtml(error.message)}</td></tr>`;
+        crud.tableBody.innerHTML = `<tr><td colspan="8" class="empty-state">${escapeHtml(error.message)}</td></tr>`;
       }
     }
 

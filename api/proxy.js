@@ -6,7 +6,7 @@ import { handleAction, errorResponse } from "./lib/backend.js";
 
 const ACTIONS = new Set([
   "login", "logout", "dashboardClient", "dashboardAdmin", "kirimKeluhan",
-  "updateBroadcast", "updateStatusKeluhan", "generateInvoiceMidtrans",
+  "updateBroadcast", "updateStatusKeluhan", "generateInvoiceMidtrans", "kelolaPelanggan",
 ]);
 
 export default async function handler(req, res) {
@@ -32,7 +32,7 @@ export default async function handler(req, res) {
   const isAction = Object.prototype.hasOwnProperty.call(body, "action");
   if (isAction) {
     if (!ACTIONS.has(body.action)) return fail(400, "Aksi tidak diizinkan.");
-    if (Object.keys(body).some((key) => !["action", "token", "id", "password", "idPelanggan", "pesan", "idTiket"].includes(key))) {
+    if (Object.keys(body).some((key) => !["action", "token", "id", "password", "idPelanggan", "pesan", "idTiket", "mode", "nama", "paket", "harga", "noWhatsApp", "statusSistem"].includes(key))) {
       return fail(400, "Parameter tidak diizinkan.");
     }
   } else {

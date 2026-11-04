@@ -255,6 +255,91 @@ async function pruneExpiredRate(docRef) {
   }
 }
 
+
+
+// ---------------------------------------------------------------------------
+// Kelola akun pelanggan (CRUD) — khusus admin
+// ---------------------------------------------------------------------------
+function validId(id) {
+  const v = String(id || "").trim();
+  if (!/^[A-Za-z0-9_-]{2,24}$/.test(v)) throw new Error("Input tidak valid.");
+  return v;
+}
+async function kelolaPelanggan(body) {
+  const mode = String(body.mode || "");
+  const fs = db();
+
+  if (mode === "list") {
+    const snap = await fs.collection(COL.pelanggan).orderBy("id").get();
+    const items = snap.docs.map((d) => {
+      const p = d.data();
+      return { id: p.id, nama: p.nama, paket: p.paket, harga: toNumber(p.harga),
+        statusSistem: p.statusSistem, noWhatsApp: p.noWhatsApp,
+        statusPembayaran: p.statusPembayaran || "", tglPasang: formatDateIso(p.tglPasang) };
+    });
+    return { pelanggan: items };
+  }
+
+  if (mode === "create") {
+    const id = validId(body.id);
+    const nama = requiredText(body.nama, 120);
+    const paket = requiredText(body.paket, 60);
+    const harga = toNumber(body.harga);
+    if (!Number.isInteger(harga) || harga <= 0) throw new Error("Nominal pembayaran tidak valid.");
+    const password = requiredText(body.password, 64);
+    const wa = String(body.noWhatsApp || "").replace(/[^0-9]/g, "");
+    const exists = await findPelangganById(id);
+    if (exists) throw new Error("ID pelanggan sudah digunakan.");
+    await fs.collection(COL.pelanggan).doc(id).set({
+      id, nama, paket, harga, password,
+      statusSistem: "AKTIF", tglPasang: new Date(),
+      tglJatuhTempo: computeDueDate(), statusPembayaran: "LUNAS", noWhatsApp: wa,
+    });
+    return { id, pesan: "Pelanggan ditambahkan." };
+  }
+
+  if (mode === "update") {
+    const id = validId(body.id);
+    const existing = await findPelangganById(id);
+    if (!existing) throw new Error("Pelanggan tidak ditemukan.");
+    const updates = {};
+    if (body.nama !== undefined) updates.nama = requiredText(body.nama, 120);
+    if (body.paket !== undefined) updates.paket = requiredText(body.paket, 60);
+    if (body.harga !== undefined) {
+      const harga = toNumber(body.harga);
+      if (!Number.isInteger(harga) || harga <= 0) throw new Error("Nominal pembayaran tidak valid.");
+      updates.harga = harga;
+    }
+    if (body.password !== undefined && String(body.password).trim() !== "") updates.password = requiredText(body.password, 64);
+    if (body.noWhatsApp !== undefined) updates.noWhatsApp = String(body.noWhatsApp).replace(/[^0-9]/g, "");
+    if (body.statusSistem !== undefined) {
+      const st = String(body.statusSistem).toUpperCase();
+      if (!["AKTIF", "TERISOLIR"].includes(st)) throw new Error("Input tidak valid.");
+      updates.statusSistem = st;
+    }
+    if (!Object.keys(updates).length) throw new Error("Input tidak valid.");
+    await updatePelanggan(id, updates);
+    return { id, pesan: "Pelanggan diperbarui." };
+  }
+
+  if (mode === "delete") {
+    const id = validId(body.id);
+    const existing = await findPelangganById(id);
+    if (!existing) throw new Error("Pelanggan tidak ditemukan.");
+    // Hapus juga invoice & sesi terkait agar tidak ada data yatim.
+    const invSnap = await fs.collection(COL.invoice).where("idPelanggan", "==", id).get();
+    const batch = fs.batch();
+    invSnap.docs.forEach((d) => batch.delete(d.ref));
+    const sesiSnap = await fs.collection(COL.sesi).where("id", "==", id).get();
+    sesiSnap.docs.forEach((d) => batch.delete(d.ref));
+    batch.delete(fs.collection(COL.pelanggan).doc(id));
+    await batch.commit();
+    return { id, pesan: "Pelanggan dihapus." };
+  }
+
+  throw new Error("Action tidak dikenali.");
+}
+
 // ---------------------------------------------------------------------------
 // Midtrans
 // ---------------------------------------------------------------------------
@@ -323,6 +408,10 @@ export async function handleAction(body) {
     case "updateStatusKeluhan": {
       await requireRole(session, "admin");
       return { success: true, data: await updateStatusKeluhan(requiredText(body.idTiket, 120)) };
+    }
+    case "kelolaPelanggan": {
+      await requireRole(session, "admin");
+      return { success: true, data: await kelolaPelanggan(body) };
     }
     default:
       throw new Error("Action tidak dikenali.");

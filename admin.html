@@ -442,6 +442,20 @@
     @media (prefers-reduced-motion: reduce) {
       * { transition: none !important; }
     }
+  
+    .crud-toolbar { margin: 12px 0; }
+    .crud-dialog { border: none; border-radius: 14px; padding: 0; max-width: 420px; width: 92%; }
+    .crud-dialog::backdrop { background: rgba(5,20,65,.55); }
+    .crud-dialog form { padding: 20px; display: grid; gap: 10px; }
+    .crud-dialog h3 { margin: 0 0 4px; }
+    .crud-dialog label { font-size: 13px; font-weight: 600; display: grid; gap: 4px; }
+    .crud-dialog input, .crud-dialog select { padding: 9px 11px; border: 1px solid #d7dcea; border-radius: 8px; font-size: 14px; }
+    .crud-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 6px; }
+    .crud-actions .btn-ghost { background: #eef1f8; border: none; padding: 9px 16px; border-radius: 8px; cursor: pointer; }
+    .crud-actions .btn-primary { background: linear-gradient(135deg,#051441,#3763EB); color: #fff; border: none; padding: 9px 16px; border-radius: 8px; cursor: pointer; }
+    .crud-row-actions button { border: none; cursor: pointer; padding: 6px 10px; border-radius: 7px; font-size: 12.5px; margin-right: 6px; }
+    .crud-btn-edit { background: #e8eefc; color: #2b56c6; }
+    .crud-btn-del { background: #fdecec; color: #c03535; }
   </style>
 </head>
 <body>
@@ -568,8 +582,54 @@
         <p class="card-sub">Admin bisa menandai tiket sebagai selesai setelah gangguan ditangani.</p>
         <div id="ticketList" class="ticket-list"></div>
       </section>
+
+      <section class="card" id="crudSection">
+        <h2>
+          <span class="ico">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </span>
+          Kelola Akun Pelanggan
+        </h2>
+        <p class="card-sub">Tambah, ubah, atau hapus akun pelanggan. Menghapus akun juga menghapus riwayat tagihannya.</p>
+        <div class="crud-toolbar">
+          <button id="btnTambahPelanggan" class="btn-primary" type="button">+ Tambah Pelanggan</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th><th>Nama</th><th>Paket</th><th>Harga</th><th>Status</th><th>WhatsApp</th><th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="crudTableBody"></tbody>
+          </table>
+        </div>
+      </section>
     </section>
   </main>
+
+  <dialog id="crudDialog" class="crud-dialog">
+    <form id="crudForm" method="dialog">
+      <h3 id="crudTitle">Tambah Pelanggan</h3>
+      <label>ID Pelanggan<br><input name="id" id="crudId" required pattern="[A-Za-z0-9_-]{2,24}"></label>
+      <label>Nama Lengkap<br><input name="nama" id="crudNama" required maxlength="120"></label>
+      <label>Paket<br><input name="paket" id="crudPaket" required maxlength="60" placeholder="PAKET A"></label>
+      <label>Harga (Rp)<br><input name="harga" id="crudHarga" required type="number" min="1" step="1"></label>
+      <label>Password<br><input name="password" id="crudPassword" required maxlength="64"></label>
+      <label>No. WhatsApp<br><input name="noWhatsApp" id="crudWa" type="tel" maxlength="16" placeholder="62xxxxxxxxxx"></label>
+      <label>Status Sistem<br>
+        <select name="statusSistem" id="crudStatus">
+          <option value="AKTIF">AKTIF</option>
+          <option value="TERISOLIR">TERISOLIR</option>
+        </select>
+      </label>
+      <div class="crud-actions">
+        <button type="button" id="crudBatal" class="btn-ghost">Batal</button>
+        <button type="submit" id="crudSimpan" class="btn-primary">Simpan</button>
+      </div>
+      <div id="crudFeedback" class="feedback"></div>
+    </form>
+  </dialog>
 
   <script>
     const API_ENDPOINT = "/api/proxy";
@@ -774,6 +834,134 @@
     el.logoutButton.addEventListener("click", logout);
 
     if (session && session.role === "admin" && session.token) loadDashboard();
-  </script>
+  
+    // ---- Kelola Akun Pelanggan (CRUD) ----
+    const crud = {
+      section: document.getElementById("crudSection"),
+      tableBody: document.getElementById("crudTableBody"),
+      btnTambah: document.getElementById("btnTambahPelanggan"),
+      dialog: document.getElementById("crudDialog"),
+      form: document.getElementById("crudForm"),
+      title: document.getElementById("crudTitle"),
+      id: document.getElementById("crudId"),
+      nama: document.getElementById("crudNama"),
+      paket: document.getElementById("crudPaket"),
+      harga: document.getElementById("crudHarga"),
+      password: document.getElementById("crudPassword"),
+      wa: document.getElementById("crudWa"),
+      status: document.getElementById("crudStatus"),
+      batal: document.getElementById("crudBatal"),
+      feedback: document.getElementById("crudFeedback"),
+    };
+    let crudMode = "create"; // "create" | "edit"
+
+    async function crudCall(payload) {
+      const response = await fetch(API_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...payload, action: "kelolaPelanggan", token: session.token })
+      });
+      const result = await response.json();
+      if (!result.success) throw new Error(result.message || "Permintaan gagal.");
+      return result.data;
+    }
+
+    function crudSetFeedback(message, type) {
+      crud.feedback.textContent = message || "";
+      crud.feedback.className = "feedback " + (type || "");
+    }
+
+    async function muatCrud() {
+      try {
+        const data = await crudCall({ mode: "list" });
+        const items = data.pelanggan || [];
+        if (!items.length) {
+          crud.tableBody.innerHTML = '<tr><td colspan="7" class="empty-state">Belum ada pelanggan.</td></tr>';
+          return;
+        }
+        crud.tableBody.innerHTML = items.map((c) => `
+          <tr>
+            <td><strong>${escapeHtml(c.id)}</strong></td>
+            <td>${escapeHtml(c.nama)}</td>
+            <td>${escapeHtml(c.paket)}</td>
+            <td>${formatCurrency(c.harga)}</td>
+            <td><span class="pill ${String(c.statusSistem).toUpperCase() === "AKTIF" ? "active" : "isolated"}">${escapeHtml(c.statusSistem)}</span></td>
+            <td>${escapeHtml(c.noWhatsApp || "-")}</td>
+            <td class="crud-row-actions">
+              <button type="button" class="crud-btn-edit" data-edit="${escapeHtml(c.id)}">Edit</button>
+              <button type="button" class="crud-btn-del" data-del="${escapeHtml(c.id)}" data-nama="${escapeHtml(c.nama)}">Hapus</button>
+            </td>
+          </tr>`).join("");
+      } catch (error) {
+        crud.tableBody.innerHTML = `<tr><td colspan="7" class="empty-state">${escapeHtml(error.message)}</td></tr>`;
+      }
+    }
+
+    function bukaDialog(mode, customer) {
+      crudMode = mode;
+      crud.title.textContent = mode === "create" ? "Tambah Pelanggan" : "Edit Pelanggan: " + customer.id;
+      crud.id.value = customer ? customer.id : "";
+      crud.id.disabled = mode === "edit";
+      crud.nama.value = customer ? customer.nama : "";
+      crud.paket.value = customer ? customer.paket : "";
+      crud.harga.value = customer ? customer.harga : "";
+      crud.password.value = "";
+      crud.password.required = mode === "create";
+      crud.password.placeholder = mode === "edit" ? "(kosongkan bila tidak diganti)" : "";
+      crud.wa.value = customer ? (customer.noWhatsApp || "") : "";
+      crud.status.value = customer ? (customer.statusSistem || "AKTIF") : "AKTIF";
+      crudSetFeedback("", "");
+      crud.dialog.showModal();
+    }
+
+    crud.btnTambah.addEventListener("click", () => bukaDialog("create", null));
+    crud.batal.addEventListener("click", () => crud.dialog.close());
+
+    crud.tableBody.addEventListener("click", async (event) => {
+      const editBtn = event.target.closest("[data-edit]");
+      const delBtn = event.target.closest("[data-del]");
+      if (editBtn) {
+        try {
+          const data = await crudCall({ mode: "list" });
+          const customer = (data.pelanggan || []).find((c) => c.id === editBtn.dataset.edit);
+          if (customer) bukaDialog("edit", customer);
+        } catch (error) { alert(error.message); }
+      }
+      if (delBtn) {
+        if (!confirm(`Hapus akun ${delBtn.dataset.del} (${delBtn.dataset.nama})? Riwayat tagihannya juga akan dihapus.`)) return;
+        try {
+          await crudCall({ mode: "delete", id: delBtn.dataset.del });
+          await muatCrud();
+          await loadDashboard();
+        } catch (error) { alert(error.message); }
+      }
+    });
+
+    crud.form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const payload = {
+        mode: crudMode,
+        id: crud.id.value.trim(),
+        nama: crud.nama.value.trim(),
+        paket: crud.paket.value.trim(),
+        harga: Number(crud.harga.value),
+        noWhatsApp: crud.wa.value.trim(),
+        statusSistem: crud.status.value,
+      };
+      if (crudMode === "create" || crud.password.value.trim() !== "") payload.password = crud.password.value;
+      const btn = document.getElementById("crudSimpan");
+      btn.disabled = true;
+      try {
+        await crudCall(payload);
+        crud.dialog.close();
+        await muatCrud();
+        await loadDashboard();
+      } catch (error) {
+        crudSetFeedback(error.message, "error");
+      } finally { btn.disabled = false; }
+    });
+
+    muatCrud();
+</script>
 </body>
 </html>

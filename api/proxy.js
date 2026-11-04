@@ -2,7 +2,7 @@
  * API utama — memproses action JSON (login, dashboard, dll.) langsung ke Firestore.
  * Menggantikan peran proxy → Apps Script. Respons identik dengan backend lama.
  */
-import { handleAction, errorResponse } from "./_lib/backend.js";
+import { handleAction, errorResponse } from "./lib/backend.js";
 
 const ACTIONS = new Set([
   "login", "logout", "dashboardClient", "dashboardAdmin", "kirimKeluhan",

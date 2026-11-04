@@ -3,7 +3,7 @@
  * Melakukan: terbitkan invoice tgl 1, sinkron status, isolir lewat tgl 20.
  * Dilindungi secret CRON_SECRET via header Authorization.
  */
-import { dailyJob } from "./_lib/backend.js";
+import { dailyJob } from "./lib/backend.js";
 
 export default async function handler(req, res) {
   const secret = process.env.CRON_SECRET || "";

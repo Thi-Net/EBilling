@@ -820,7 +820,16 @@ function formatCurrency(value) {
       state.informasi = data.informasi || [];
 
       el.welcomeText.textContent = `${data.user.nama} • ${data.user.id}`;
-      el.heroMessage.textContent = `Paket ${data.user.paket} aktif dengan tagihan ${formatCurrency(data.user.harga)} per bulan.`;
+      if (String(data.user.statusSistem).toUpperCase() === "TERISOLIR") {
+        const bulanTagihan = data.user.periodeTagihan ? formatPeriodeId_(data.user.periodeTagihan) : "";
+        el.heroMessage.textContent = bulanTagihan
+          ? `SILAHKAN BAYAR TAGIHAN BULAN ${bulanTagihan}.`
+          : "SILAHKAN BAYAR TAGIHAN.";
+      } else if (data.user.adaTagihan === false || data.user.statusPembayaran === "LUNAS") {
+        el.heroMessage.textContent = "TIDAK ADA TAGIHAN.";
+      } else {
+        el.heroMessage.textContent = `Paket ${data.user.paket} aktif dengan tagihan ${formatCurrency(data.user.harga)} per bulan.`;
+      }
       renderStatus(data.user.statusSistem);
       const tidakAdaTagihan = data.user.adaTagihan === false || data.user.statusPembayaran === "LUNAS";
       if (el.payButton) {

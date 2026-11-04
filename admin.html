@@ -456,6 +456,15 @@
     .crud-row-actions button { border: none; cursor: pointer; padding: 6px 10px; border-radius: 7px; font-size: 12.5px; margin-right: 6px; }
     .crud-btn-edit { background: #e8eefc; color: #2b56c6; }
     .crud-btn-del { background: #fdecec; color: #c03535; }
+  
+    .tab-bar { display: flex; gap: 8px; margin: 18px 0; flex-wrap: wrap; }
+    .tab-btn { padding: 10px 18px; border-radius: 10px; border: 1px solid #dfe4f2; background: #fff; color: #44506e; font-weight: 600; cursor: pointer; font-size: 14px; }
+    .tab-btn.active { background: linear-gradient(135deg,#051441,#3763EB); color: #fff; border-color: transparent; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .charts-grid { margin-top: 16px; }
+    .chart-box { position: relative; height: 260px; }
+    .chart-box.tall { height: 300px; }
   </style>
 </head>
 <body>
@@ -491,7 +500,14 @@
       </div>
     </div>
 
-    <section class="dashboard">
+    <nav class="tab-bar" role="tablist">
+      <button class="tab-btn active" id="tabBtnDashboard" data-tab="dashboard" type="button">Dashboard</button>
+      <button class="tab-btn" id="tabBtnKelola" data-tab="kelola" type="button">Kelola Data Pelanggan</button>
+    </nav>
+
+    <!-- ======== TAB DASHBOARD ======== -->
+    <div id="panelDashboard" class="tab-panel active">
+      <section class="dashboard">
       <div class="stats">
         <article class="stat-card">
           <div class="stat-head">
@@ -522,8 +538,57 @@
         </article>
       </div>
 
-      <section class="grid-2">
+      
+
+      <section class="grid-2 charts-grid">
         <article class="card">
+          <h2>
+            <span class="ico">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+            </span>
+            Status Pelanggan
+          </h2>
+          <div class="chart-box"><canvas id="chartStatus"></canvas></div>
+        </article>
+        <article class="card">
+          <h2>
+            <span class="ico">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+            </span>
+            Status Pembayaran
+          </h2>
+          <div class="chart-box"><canvas id="chartBayar"></canvas></div>
+        </article>
+      </section>
+
+      <section class="card">
+        <h2>
+          <span class="ico">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+          </span>
+          Pendapatan Bulanan (Lunas)
+        </h2>
+        <p class="card-sub">Total pembayaran berstatus SETTLEMENT per bulan (6 bulan terakhir).</p>
+        <div class="chart-box tall"><canvas id="chartPendapatan"></canvas></div>
+      </section>
+
+      <section class="card">
+        <h2>
+          <span class="ico">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </span>
+          Keluhan Pelanggan
+        </h2>
+        <p class="card-sub">Admin bisa menandai tiket sebagai selesai setelah gangguan ditangani.</p>
+        <div id="ticketList" class="ticket-list"></div>
+      </section>
+
+      
+    </div>
+
+    <!-- ======== TAB KELOLA DATA PELANGGAN ======== -->
+    <div id="panelKelola" class="tab-panel">
+      <article class="card">
           <h2>
             <span class="ico">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -550,38 +615,7 @@
           </div>
         </article>
 
-        <aside class="card">
-          <h2>
-            <span class="ico">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 22 2 13 21 11 13 3 11z"/></svg>
-            </span>
-            Broadcast Informasi
-          </h2>
-          <p class="card-sub">Pesan akan disimpan ke sheet <code>Data_Informasi</code> dan muncul di dashboard pelanggan.</p>
-          <form id="broadcastForm">
-            <div class="form-group">
-              <label for="broadcastMessage">Pesan Broadcast</label>
-              <textarea id="broadcastMessage" placeholder="Contoh: Maintenance jaringan malam ini pukul 23.00 sampai 01.00 WIB." required></textarea>
-            </div>
-            <button class="button button-primary" type="submit">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-              Simpan Broadcast
-            </button>
-            <div id="broadcastFeedback" class="feedback"></div>
-          </form>
-        </aside>
-      </section>
-
-      <section class="card">
-        <h2>
-          <span class="ico">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          </span>
-          Keluhan Pelanggan
-        </h2>
-        <p class="card-sub">Admin bisa menandai tiket sebagai selesai setelah gangguan ditangani.</p>
-        <div id="ticketList" class="ticket-list"></div>
-      </section>
+        
 
       <section class="card" id="crudSection">
         <h2>
@@ -605,6 +639,33 @@
           </table>
         </div>
       </section>
+    
+    </div>
+
+    <section class="card broadcast-wrap">
+      <aside class="card">
+          <h2>
+            <span class="ico">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 22 2 13 21 11 13 3 11z"/></svg>
+            </span>
+            Broadcast Informasi
+          </h2>
+          <p class="card-sub">Pesan akan disimpan ke sheet <code>Data_Informasi</code> dan muncul di dashboard pelanggan.</p>
+          <form id="broadcastForm">
+            <div class="form-group">
+              <label for="broadcastMessage">Pesan Broadcast</label>
+              <textarea id="broadcastMessage" placeholder="Contoh: Maintenance jaringan malam ini pukul 23.00 sampai 01.00 WIB." required></textarea>
+            </div>
+            <button class="button button-primary" type="submit">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Simpan Broadcast
+            </button>
+            <div id="broadcastFeedback" class="feedback"></div>
+          </form>
+        </aside>
+      </section>
+
+      
     </section>
   </main>
 
@@ -631,6 +692,7 @@
     </form>
   </dialog>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script>
     const API_ENDPOINT = "/api/proxy";
 
@@ -835,6 +897,85 @@
 
     if (session && session.role === "admin" && session.token) loadDashboard();
   
+    // ---- Tab switching ----
+    const tabBtns = document.querySelectorAll(".tab-btn");
+    tabBtns.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        tabBtns.forEach((b) => b.classList.remove("active"));
+        document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById("panel" + btn.dataset.tab.charAt(0).toUpperCase() + btn.dataset.tab.slice(1)).classList.add("active");
+        if (btn.dataset.tab === "dashboard") renderCharts();
+      });
+    });
+
+    // ---- Charts ----
+    let chartStatus = null, chartBayar = null, chartPendapatan = null;
+    async function renderCharts() {
+      try {
+        const data = await postJson({ action: "dashboardAdmin" });
+        const pelanggan = data.pelanggan || [];
+        const aktif = pelanggan.filter((p) => String(p.statusSistem).toUpperCase() === "AKTIF").length;
+        const isolir = pelanggan.length - aktif;
+        const lunas = pelanggan.filter((p) => String(p.statusPembayaran).toUpperCase() === "LUNAS").length;
+        const belum = pelanggan.length - lunas;
+
+        const ctx1 = document.getElementById("chartStatus");
+        if (ctx1) {
+          if (chartStatus) chartStatus.destroy();
+          chartStatus = new Chart(ctx1, {
+            type: "doughnut",
+            data: { labels: ["Aktif", "Terisolir"], datasets: [{ data: [aktif, isolir], backgroundColor: ["#22a06b", "#f5a623"], borderWidth: 0 }] },
+            options: { responsive: true, maintainAspectRatio: false, cutout: "62%", plugins: { legend: { position: "bottom" } } }
+          });
+        }
+        const ctx2 = document.getElementById("chartBayar");
+        if (ctx2) {
+          if (chartBayar) chartBayar.destroy();
+          chartBayar = new Chart(ctx2, {
+            type: "doughnut",
+            data: { labels: ["Lunas", "Belum Bayar"], datasets: [{ data: [lunas, belum], backgroundColor: ["#3763EB", "#e5484d"], borderWidth: 0 }] },
+            options: { responsive: true, maintainAspectRatio: false, cutout: "62%", plugins: { legend: { position: "bottom" } } }
+          });
+        }
+
+        // Pendapatan bulanan dari riwayat pembayaran SETTLEMENT
+        const riwayat = await (async () => {
+          const res = await fetch(API_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "kelolaPelanggan", mode: "pendapatan", token: session.token }) });
+          const r = await res.json();
+          return r.success ? (r.data || []) : [];
+        })();
+        const bulanMap = {};
+        const now = new Date();
+        const labels = [], keys = [];
+        for (let i = 5; i >= 0; i--) {
+          const d0 = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          const key = d0.getFullYear() + "-" + String(d0.getMonth() + 1).padStart(2, "0");
+          keys.push(key);
+          labels.push(d0.toLocaleDateString("id-ID", { month: "short", year: "2-digit" }));
+          bulanMap[key] = 0;
+        }
+        (riwayat || []).forEach((row) => {
+          const tgl = row.tgl || "";
+          const key = String(tgl).slice(0, 7);
+          if (key in bulanMap) bulanMap[key] += Number(row.nominal || 0);
+        });
+        const ctx3 = document.getElementById("chartPendapatan");
+        if (ctx3) {
+          if (chartPendapatan) chartPendapatan.destroy();
+          chartPendapatan = new Chart(ctx3, {
+            type: "bar",
+            data: { labels, datasets: [{ label: "Pendapatan", data: keys.map((k) => bulanMap[k]), backgroundColor: "#3763EB", borderRadius: 8, maxBarThickness: 46 }] },
+            options: { responsive: true, maintainAspectRatio: false,
+              plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => formatCurrency(c.parsed.y) } } },
+              scales: { y: { ticks: { callback: (v) => "Rp" + (v >= 1000000 ? (v / 1000000) + "jt" : v >= 1000 ? (v / 1000) + "rb" : v) } } } }
+          });
+        }
+      } catch (error) { console.error("chart:", error); }
+    }
+    renderCharts();
+
     // ---- Kelola Akun Pelanggan (CRUD) ----
     const crud = {
       section: document.getElementById("crudSection"),

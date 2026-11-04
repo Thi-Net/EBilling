@@ -322,6 +322,15 @@ async function kelolaPelanggan(body) {
     return { id, pesan: "Pelanggan diperbarui." };
   }
 
+  if (mode === "pendapatan") {
+    const snap = await fs.collection(COL.pembayaran).where("status", "==", "SETTLEMENT").get();
+    const rows = snap.docs.map((d0) => {
+      const r = d0.data();
+      return { tgl: r.tgl && r.tgl.toDate ? r.tgl.toDate().toISOString() : String(r.tgl || ""), nominal: toNumber(r.nominal) };
+    });
+    return rows;
+  }
+
   if (mode === "delete") {
     const id = validId(body.id);
     const existing = await findPelangganById(id);

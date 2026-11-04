@@ -36,8 +36,7 @@ export default async function handler(req, res) {
       return fail(400, "Parameter tidak diizinkan.");
     }
   } else {
-    const allowed = ["order_id", "status_code", "gross_amount", "signature_key", "transaction_status", "fraud_status", "payment_type"];
-    if (Object.keys(body).some((key) => !allowed.includes(key))) return fail(400, "Notifikasi pembayaran tidak valid.");
+    // Webhook Midtrans: field inti wajib ada; field lain diabaikan (payload Midtrans bervariasi).
     const fields = ["order_id", "status_code", "gross_amount", "signature_key", "transaction_status"];
     if (!fields.every((key) => typeof body[key] === "string" && body[key].trim())) {
       return fail(400, "Notifikasi pembayaran tidak valid.");

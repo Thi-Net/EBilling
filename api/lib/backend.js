@@ -322,6 +322,16 @@ async function kelolaPelanggan(body) {
     return { id, pesan: "Pelanggan diperbarui." };
   }
 
+  if (mode === "invoices") {
+    const snap = await fs.collection(COL.invoice).get();
+    const rows = snap.docs.map((d0) => {
+      const r = d0.data();
+      return { orderId: r.orderId, idPelanggan: r.idPelanggan, periode: r.periode, status: r.status,
+        tgl: r.createdAt && r.createdAt.toDate ? r.createdAt.toDate().toISOString() : String(r.createdAt || "") };
+    });
+    return rows;
+  }
+
   if (mode === "pendapatan") {
     const snap = await fs.collection(COL.pembayaran).where("status", "==", "SETTLEMENT").get();
     const rows = snap.docs.map((d0) => {
@@ -655,12 +665,23 @@ export async function reconcilePending() {
   const { api, auth } = midtransBase();
   const snap = await db().collection(COL.invoice).where("status", "==", "PENDING").get();
   let disinkron = 0;
+  let dihapus = 0;
   for (const doc of snap.docs) {
     const inv = doc.data();
     if (!inv.snapToken && !inv.orderId) continue;
     try {
       const res = await fetch(`${api}/v2/${encodeURIComponent(inv.orderId)}/status`, { headers: { Authorization: auth } });
-      if (!res.ok) continue;
+      if (!res.ok) {
+        // 404 = tidak pernah ada transaksi (mis. placeholder migrasi tanpa Snap) → hapus.
+        if (res.status === 404) {
+          const pid = String(inv.idPelanggan);
+          await doc.ref.delete();
+          dihapus++;
+          // Terbitkan pengganti bila pelanggan tak punya tagihan aktif dan periode tsb belum dilunasi.
+          try { await ensureMonthlyInvoice(pid, new Date()); } catch (e) {}
+        }
+        continue;
+      }
       const cur = await res.json();
       const status = String(cur.transaction_status || "").toLowerCase();
       const settled = status === "settlement" || (status === "capture" && String(cur.fraud_status || "").toLowerCase() === "accept");
@@ -679,7 +700,7 @@ export async function reconcilePending() {
       }
     } catch (e) { console.error("reconcile", inv.orderId, e); }
   }
-  return { success: true, dicek: snap.size, disinkron };
+  return { success: true, dicek: snap.size, disinkron, dihapus };
 }
 
 // ---------------------------------------------------------------------------
@@ -693,7 +714,7 @@ export async function dailyJob() {
   const hasil = { terbit: 0, isolir: 0, sync: 0 };
   for (const p of pelanggan) {
     if (!p.id) continue;
-    if (day === 1) { if (await ensureMonthlyInvoice(p.id, now)) hasil.terbit++; }
+    if (await ensureMonthlyInvoice(p.id, now)) hasil.terbit++;
     const invoices = await allInvoices(p.id);
     const outstanding = findLatestUnpaid(invoices);
     const paid = !outstanding;

@@ -129,7 +129,8 @@ async function allInvoices(idPelanggan = null) {
 function findLatestUnpaid(invoices) {
   let latest = null, latestKey = -1;
   for (const inv of invoices) {
-    if (String(inv.status) === "SETTLEMENT") continue;
+    const st = String(inv.status).toUpperCase();
+    if (st === "SETTLEMENT" || st === "FAILED") continue;
     const key = periodKeyFromString(inv.periode);
     if (isNaN(key)) continue;
     if (key >= latestKey) { latestKey = key; latest = inv; }
@@ -593,8 +594,19 @@ async function generateInvoiceMidtrans(idPelanggan) {
 
   const invoices = await allInvoices(idPelanggan);
   let target = findLatestUnpaid(invoices);
-  if (!target) throw new Error("Tidak ada tagihan yang harus dibayar.");
-  if (target.status === "SETTLEMENT") throw new Error("Tagihan sudah dibayar.");
+  if (!target) {
+    // Tidak ada tagihan aktif. Kalau ada invoice gagal/kedaluwarsa yang periodenya
+    // belum pernah lunas, terbitkan baris baru untuk periode itu (bayar ulang).
+    const settled = findLatestSettledPeriod(invoices);
+    const retryable = invoices
+      .filter((inv) => ["EXPIRE", "EXPIRED", "CANCEL", "DENY", "FAILED"].includes(String(inv.status).toUpperCase()))
+      .filter((inv) => { const k = periodKeyFromString(inv.periode); return !isNaN(k) && (settled === null || k > settled); })
+      .sort((a, b) => periodKeyFromString(b.periode) - periodKeyFromString(a.periode))[0];
+    if (!retryable) throw new Error("Tidak ada tagihan yang harus dibayar.");
+    const fresh = await createInvoiceRow(idPelanggan, periodKeyFromString(retryable.periode));
+    target = await findInvoiceByOrder(fresh.orderId);
+  }
+  if (String(target.status).toUpperCase() === "SETTLEMENT") throw new Error("Tagihan sudah dibayar.");
 
   if (target.status === "PENDING" && target.snapToken) {
     return { orderId: target.orderId, snapToken: target.snapToken, redirectUrl: target.redirectUrl || "" };

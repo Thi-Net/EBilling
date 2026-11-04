@@ -648,6 +648,41 @@ async function handleMidtransWebhook(payload) {
 }
 
 // ---------------------------------------------------------------------------
+// Rekonsiliasi: cek invoice PENDING ke Midtrans & sinkron bila sudah settlement.
+// Jalan di cron harian + bisa dipicu manual.
+// ---------------------------------------------------------------------------
+export async function reconcilePending() {
+  const { api, auth } = midtransBase();
+  const snap = await db().collection(COL.invoice).where("status", "==", "PENDING").get();
+  let disinkron = 0;
+  for (const doc of snap.docs) {
+    const inv = doc.data();
+    if (!inv.snapToken && !inv.orderId) continue;
+    try {
+      const res = await fetch(`${api}/v2/${encodeURIComponent(inv.orderId)}/status`, { headers: { Authorization: auth } });
+      if (!res.ok) continue;
+      const cur = await res.json();
+      const status = String(cur.transaction_status || "").toLowerCase();
+      const settled = status === "settlement" || (status === "capture" && String(cur.fraud_status || "").toLowerCase() === "accept");
+      if (settled) {
+        const id = String(inv.idPelanggan);
+        await updateInvoice(doc.id, { status: "PROCESSING" });
+        await updatePelanggan(id, { statusSistem: "AKTIF" });
+        aktifkanUser(id);
+        await logPembayaran({ order_id: inv.orderId, gross_amount: String(inv.nominal), payment_type: cur.payment_type }, "SETTLEMENT");
+        await updateInvoice(doc.id, { status: "SETTLEMENT" });
+        try { await ensureMonthlyInvoice(id, new Date()); } catch (e) {}
+        await syncStatusPembayaran(id);
+        disinkron++;
+      } else if (["expire", "cancel", "deny"].includes(status) && inv.status === "PENDING") {
+        await updateInvoice(doc.id, { status: status.toUpperCase() });
+      }
+    } catch (e) { console.error("reconcile", inv.orderId, e); }
+  }
+  return { success: true, dicek: snap.size, disinkron };
+}
+
+// ---------------------------------------------------------------------------
 // tugas harian (dipanggil Vercel Cron: /api/cron-daily)
 // ---------------------------------------------------------------------------
 export async function dailyJob() {

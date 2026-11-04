@@ -17,7 +17,7 @@
  *   ADMIN_ID / ADMIN_PASSWORD / ADMIN_NAME : login admin
  *   WHATSAPP_ADMIN, TIMEZONE
  */
-import firebase from "firebase-admin/app";
+import { cert, initializeApp } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 
 let app;
@@ -26,7 +26,7 @@ function db() {
     const raw = (process.env.FIREBASE_SERVICE_ACCOUNT || "").trim();
     if (!raw) throw new Error("Konfigurasi server belum lengkap.");
     const sa = JSON.parse(raw);
-    app = firebase.initializeApp({ credential: firebase.cert(sa) });
+    app = initializeApp({ credential: cert(sa) });
   }
   return getFirestore();
 }

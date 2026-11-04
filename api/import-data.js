@@ -3,13 +3,13 @@
  * Dilindungi CRON_SECRET. Body: hasil export JSON dari exportDataForMigration().
  * Dipanggil dengan POST { endpoint }/api/import-data dengan header Authorization: Bearer <CRON_SECRET>
  */
-import firebase from "firebase-admin/app";
+import { cert, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 
 function db() {
   const raw = (process.env.FIREBASE_SERVICE_ACCOUNT || "").trim();
   if (!raw) throw new Error("Konfigurasi server belum lengkap.");
-  const app = firebase.initializeApp({ credential: firebase.cert(JSON.parse(raw)) }, `import-${Date.now()}`);
+  const app = initializeApp({ credential: cert(JSON.parse(raw)) }, `import-${Date.now()}`);
   return getFirestore(app);
 }
 

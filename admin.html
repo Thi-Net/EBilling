@@ -913,7 +913,8 @@
     let chartStatus = null, chartBayar = null, chartPendapatan = null;
     async function renderCharts() {
       try {
-        const data = await postJson({ action: "dashboardAdmin" });
+        const result = await postJson({ action: "dashboardAdmin" });
+        const data = result.data || {};
         const pelanggan = data.pelanggan || [];
         const aktif = pelanggan.filter((p) => String(p.statusSistem).toUpperCase() === "AKTIF").length;
         const isolir = pelanggan.length - aktif;

@@ -608,6 +608,7 @@ async function generateInvoiceMidtrans(idPelanggan) {
   });
   const out = await res.json().catch(() => ({}));
   if (!res.ok || !out.token) {
+    console.error("Midtrans snap error:", res.status, JSON.stringify(out).slice(0, 500));
     await updateInvoice(target.docId, { status: "FAILED" });
     throw new Error("Gagal membuat transaksi Midtrans.");
   }

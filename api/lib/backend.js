@@ -17,6 +17,7 @@
  *   ADMIN_ID / ADMIN_PASSWORD / ADMIN_NAME : login admin
  *   WHATSAPP_ADMIN, TIMEZONE
  */
+import crypto from "node:crypto";
 import { cert, initializeApp } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 

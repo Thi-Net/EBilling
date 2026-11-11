@@ -323,6 +323,14 @@ async function kelolaPelanggan(body) {
     return { id, pesan: "Pelanggan diperbarui." };
   }
 
+  if (mode === "webhooklog") {
+    const snap = await fs.collection("webhook_log").orderBy("tgl", "desc").limit(10).get();
+    return snap.docs.map((d) => {
+      const r = d.data();
+      return { tgl: r.tgl && r.tgl.toDate ? r.tgl.toDate().toISOString() : "", orderId: r.orderId, pesan: String(r.pesan || "").slice(0, 500) };
+    });
+  }
+
   if (mode === "invoices") {
     const snap = await fs.collection(COL.invoice).get();
     const rows = snap.docs.map((d0) => {
@@ -639,6 +647,20 @@ async function generateInvoiceMidtrans(idPelanggan) {
 }
 
 async function handleMidtransWebhook(payload) {
+  try {
+    return await handleMidtransWebhookInner(payload);
+  } catch (err) {
+    try {
+      await db().collection("webhook_log").add({
+        tgl: FieldValue.serverTimestamp(),
+        orderId: String(payload && payload.order_id || ""),
+        pesan: String(err && err.stack || err),
+      });
+    } catch (e) {}
+    throw err;
+  }
+}
+async function handleMidtransWebhookInner(payload) {
   if (!payload || !payload.order_id) throw new Error("Webhook tidak valid.");
   verifySignature(payload);
   await verifyWithMidtransApi(payload);

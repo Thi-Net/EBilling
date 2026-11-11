@@ -56,6 +56,7 @@ export default async function handler(req, res) {
     }
     return res.status(200).json(result);
   } catch (error) {
+    console.error("[proxy] error:", error && (error.stack || error.message || error));
     return res.status(200).json(errorResponse(error));
   }
 }

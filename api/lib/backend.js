@@ -744,6 +744,10 @@ export async function handleAction(body) {
       await requireRole(session, "client");
       return { success: true, data: await kirimKeluhan(session.id, requiredText(body.pesan, 4000)) };
     }
+    case "chatAi": {
+      await requireRole(session, "client");
+      return { success: true, data: await chatAi(session.id, body.riwayat) };
+    }
     case "generateInvoiceMidtrans": {
       await requireRole(session, "client");
       return { success: true, data: await generateInvoiceMidtrans(session.id) };
@@ -896,6 +900,75 @@ async function getDashboardAdmin(idAdmin) {
     statistik: { totalPelanggan: pelanggan.length, aktif, terisolir },
     pelanggan: list, keluhan,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Chatbot AI (provider OpenAI-compatible: LLM_BASE_URL, LLM_API_KEY, LLM_MODEL)
+// ---------------------------------------------------------------------------
+async function chatAi(idPelanggan, riwayat) {
+  const { LLM_BASE_URL, LLM_API_KEY, LLM_MODEL } = process.env;
+  if (!LLM_BASE_URL || !LLM_API_KEY || !LLM_MODEL) throw new Error("Layanan chat sedang tidak tersedia.");
+  const msgs = Array.isArray(riwayat) ? riwayat.slice(-12) : [];
+  if (!msgs.length) throw new Error("Input tidak valid.");
+  for (const m of msgs) {
+    if (!m || typeof m.content !== "string" || !m.content.trim() || m.content.length > 4000) throw new Error("Input tidak valid.");
+    if (!["user", "assistant"].includes(m.role)) throw new Error("Input tidak valid.");
+  }
+  const p = await findPelangganById(idPelanggan);
+  if (!p) throw new Error("Pelanggan tidak ditemukan.");
+  const invoices = await allInvoices(idPelanggan);
+  const open = findLatestUnpaid(invoices);
+  const paketList = await (async () => {
+    try {
+      const snap = await db().collection("paket").get();
+      return snap.docs.map((d) => `${d.data().nama} Rp${toNumber(d.data().nominal).toLocaleString("id-ID")}`).join(", ") || "-";
+    } catch (e) { return "-"; }
+  })();
+  const konteks = {
+    id: p.id, nama: p.nama, paket: p.paket, harga: toNumber(p.harga),
+    statusSistem: p.statusSistem, statusPembayaran: open ? "BELUM LUNAS" : "LUNAS",
+    adaTagihan: !!open,
+    tagihan: open ? {
+      periode: periodLabelForDashboard(periodStartIsoFromLabel(String(open.periode))),
+      nominal: toNumber(open.nominal),
+      jatuhTempo: dueDateIsoOfPeriod(periodStartIsoFromLabel(String(open.periode))),
+    } : null,
+    tanggalPasang: formatDateIso(p.tglPasang).slice(0, 10),
+    daftarPaketTersedia: paketList,
+  };
+  const system = `Kamu adalah "Asisten ThiNet", chatbot layanan pelanggan ISP ThiNet (Koperasi/internet RT). Jawab SELALU dalam Bahasa Indonesia, ramah, ringkas, dan praktis.
+
+Tugasmu: membantu pelanggan mengatasi kendala seputar (1) gangguan jaringan/internet, (2) tagihan & pembayaran, (3) upgrade/perubahan paket, (4) pertanyaan umum layanan ThiNet.
+
+Data akun pelanggan ini (dipakai untuk jawaban personal, JANGAN tampilkan mentah-mentah kecuali relevan):
+${JSON.stringify(konteks)}
+
+Aturan:
+- Jika pelanggan menanyakan status tagihan/paket, gunakan data di atas.
+- Gangguan jaringan: berikan langkah perbaikan sederhana (cek lampu ONU/router, restart perangkat, cek kabel) sebelum menyarankan hubungi admin.
+- Pembayaran: jelaskan cara bayar lewat tombol "Bayar Sekarang" di dashboard (Midtrans: QRIS/GoPay/transfer). Jika sudah bayar tapi status belum update, sarankan tunggu beberapa menit atau gunakan tombol "Hubungi Admin".
+- Upgrade paket: sebutkan paket yang tersedia dan arahkan ke tombol "Hubungi Admin"/WhatsApp admin.
+- Jika keluhan tidak bisa diselesaikan sendiri, sarankan pelanggan menekan tombol "Hubungi Admin" di bawah jawabanmu.
+- Tidak punya kemampuan mengubah data/tagihan. Jangan janji tindakan yang tidak bisa kamu lakukan.
+- Topik di luar layanan ThiNet: tolak dengan sopan dan arahkan kembali ke layanan internet.`;
+  const res = await fetch(`${LLM_BASE_URL.replace(/\/+$/, "")}/chat/completions`, {
+    method: "post",
+    headers: { Authorization: `Bearer ${LLM_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: LLM_MODEL,
+      messages: [{ role: "system", content: system }, ...msgs],
+      max_tokens: 700,
+      temperature: 0.4,
+    }),
+  });
+  if (!res.ok) {
+    console.error("LLM error:", res.status, (await res.text().catch(() => "")).slice(0, 300));
+    throw new Error("Layanan chat sedang tidak tersedia.");
+  }
+  const out = await res.json();
+  const balasan = out && out.choices && out.choices[0] && out.choices[0].message && out.choices[0].message.content;
+  if (!balasan) throw new Error("Layanan chat sedang tidak tersedia.");
+  return { balasan: String(balasan).slice(0, 4000) };
 }
 
 async function kirimKeluhan(idPelanggan, pesan) {

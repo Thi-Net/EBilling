@@ -491,6 +491,37 @@
     .feedback.error { color: var(--danger); }
     .feedback.success { color: var(--green); }
 
+    /* ---------- CHAT AI ---------- */
+    .chat-box {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 320px;
+      min-height: 120px;
+      overflow-y: auto;
+      padding: 12px;
+      border-radius: 12px;
+      background: #F8FAFD;
+      border: 1px solid var(--line);
+      margin-bottom: 12px;
+    }
+    .chat-msg { max-width: 88%; padding: 9px 13px; border-radius: 13px; font-size: .84rem; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+    .chat-msg.user { align-self: flex-end; background: var(--primary); color: #fff; border-bottom-right-radius: 4px; }
+    .chat-msg.bot { align-self: flex-start; background: #fff; border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+    .chat-msg.bot .chat-actions { margin-top: 8px; }
+    .chat-btn-admin {
+      border: none; cursor: pointer; padding: 6px 12px; border-radius: 8px;
+      background: #e6f7ee; color: #178a50; font-size: .78rem; font-weight: 600;
+    }
+    .chat-form { display: flex; gap: 8px; }
+    .chat-form input {
+      flex: 1; padding: 11px 14px; border-radius: 10px; border: 1px solid var(--line);
+      background: #F8FAFD; font: inherit; font-size: .875rem; outline: none;
+    }
+    .chat-form input:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 4px rgba(55, 99, 235, .13); }
+    .chat-send { width: auto; padding: 11px 14px; }
+    .chat-typing { align-self: flex-start; color: var(--muted); font-size: .8rem; padding: 6px 12px; }
+
     .muted { color: var(--muted); line-height: 1.7; font-size: .85rem; }
 
     /* ---------- RESPONSIVE ---------- */
@@ -641,23 +672,35 @@
         <article class="card">
           <h3>
             <span class="ico">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v-2"/><path d="M9 13v-2"/></svg>
             </span>
-            Kirim Keluhan
+            Asisten AI ThiNet
           </h3>
-          <p class="card-sub">Sampaikan gangguan atau kebutuhan bantuan — tiket otomatis dibuat.</p>
-          <form id="complaintForm">
-            <div class="form-group">
-              <label for="complaintMessage">Pesan Keluhan</label>
-              <textarea id="complaintMessage" placeholder="Tuliskan gangguan atau kebutuhan bantuan Anda..." required></textarea>
-            </div>
-            <button class="button button-primary" type="submit">
+          <p class="card-sub">Tanya kendala jaringan, tagihan, atau paket — dijawab instan. Untuk keluhan lanjutan, gunakan tombol "Hubungi Admin" di bawah jawaban.</p>
+          <div id="chatBox" class="chat-box" aria-live="polite"></div>
+          <form id="chatForm" class="chat-form">
+            <input id="chatInput" type="text" maxlength="1000" placeholder="Tulis pertanyaan Anda..." autocomplete="off">
+            <button class="button button-primary chat-send" type="submit" aria-label="Kirim">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-              Kirim Keluhan
             </button>
-            <div id="complaintFeedback" class="feedback"></div>
           </form>
+          <div id="chatFeedback" class="feedback"></div>
         </article>
+
+        <dialog id="hubungiAdminDialog" class="crud-dialog">
+          <form id="hubungiAdminForm" method="dialog">
+            <h3>Hubungi Admin</h3>
+            <p class="muted" style="font-size:13px">Tuliskan keluhan Anda. Pesan masuk ke tiket admin dan WhatsApp admin akan dibuka.</p>
+            <label>Pesan Keluhan<br>
+              <textarea id="hubungiAdminPesan" required maxlength="2000" style="width:100%;min-height:110px;padding:10px;border-radius:8px;border:1px solid #dbe2ee;font:inherit;font-size:14px"></textarea>
+            </label>
+            <div class="crud-actions">
+              <button type="button" id="hubungiAdminBatal" class="btn-ghost">Batal</button>
+              <button type="submit" id="hubungiAdminKirim" class="btn-primary">Kirim Keluhan</button>
+            </div>
+            <div id="hubungiAdminFeedback" class="feedback"></div>
+          </form>
+        </dialog>
       </aside>
     </div>
   </main>
@@ -698,9 +741,6 @@
       waValue: document.getElementById("waValue"),
       historyList: document.getElementById("historyList"),
       broadcastList: document.getElementById("broadcastList"),
-      complaintForm: document.getElementById("complaintForm"),
-      complaintMessage: document.getElementById("complaintMessage"),
-      complaintFeedback: document.getElementById("complaintFeedback"),
       payButton: document.getElementById("payButton"),
       upgradeButton: document.getElementById("upgradeButton"),
       logoutButton: document.getElementById("logoutButton")
@@ -904,32 +944,99 @@ function formatCurrency(value) {
       }
     }
 
-    async function handleComplaint(event) {
-      event.preventDefault();
-      const pesan = el.complaintMessage.value.trim();
+    // ---- Chat AI ----
+    const chat = {
+      box: document.getElementById("chatBox"),
+      form: document.getElementById("chatForm"),
+      input: document.getElementById("chatInput"),
+      feedback: document.getElementById("chatFeedback"),
+      riwayat: [],
+    };
 
-      if (!pesan) {
-        setFeedback(el.complaintFeedback, "Pesan keluhan wajib diisi.", "error");
-        return;
+    function chatScroll() { chat.box.scrollTop = chat.box.scrollHeight; }
+
+    function chatAddBubble(role, text, withAdminBtn) {
+      const div = document.createElement("div");
+      div.className = "chat-msg " + (role === "user" ? "user" : "bot");
+      div.textContent = text;
+      if (withAdminBtn) {
+        const actions = document.createElement("div");
+        actions.className = "chat-actions";
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "chat-btn-admin";
+        btn.textContent = "Hubungi Admin";
+        btn.addEventListener("click", bukaHubungiAdmin);
+        actions.appendChild(btn);
+        div.appendChild(actions);
       }
+      chat.box.appendChild(div);
+      chatScroll();
+      return div;
+    }
 
+    let chatBusy = false;
+    async function handleChat(event) {
+      event.preventDefault();
+      const pesan = chat.input.value.trim();
+      if (!pesan || chatBusy) return;
+      chatBusy = true;
+      chat.input.value = "";
+      setFeedback(chat.feedback, "", "");
+      chatAddBubble("user", pesan);
+      chat.riwayat.push({ role: "user", content: pesan });
+      const typing = document.createElement("div");
+      typing.className = "chat-typing";
+      typing.textContent = "Asisten sedang mengetik...";
+      chat.box.appendChild(typing);
+      chatScroll();
       try {
-        const result = await postJson({
-          action: "kirimKeluhan",
-          pesan: pesan
-        });
+        const result = await postJson({ action: "chatAi", riwayat: chat.riwayat });
+        typing.remove();
+        const balasan = result.data.balasan || "Maaf, saya tidak bisa menjawab saat ini.";
+        chat.riwayat.push({ role: "assistant", content: balasan });
+        if (chat.riwayat.length > 24) chat.riwayat = chat.riwayat.slice(-24);
+        chatAddBubble("bot", balasan, true);
+      } catch (error) {
+        typing.remove();
+        setFeedback(chat.feedback, error.message || "Gagal menghubungi asisten.", "error");
+      } finally { chatBusy = false; chat.input.focus(); }
+    }
 
-        setFeedback(el.complaintFeedback, "Keluhan berhasil dikirim. WhatsApp admin akan dibuka.", "success");
-        el.complaintForm.reset();
+    // ---- Hubungi Admin (tiket + WhatsApp) ----
+    const haDialog = document.getElementById("hubungiAdminDialog");
+    const haForm = document.getElementById("hubungiAdminForm");
+    const haPesan = document.getElementById("hubungiAdminPesan");
+    const haFeedback = document.getElementById("hubungiAdminFeedback");
 
+    function bukaHubungiAdmin() {
+      haPesan.value = "";
+      haFeedback.textContent = "";
+      haDialog.showModal();
+      haPesan.focus();
+    }
+
+    document.getElementById("hubungiAdminBatal").addEventListener("click", () => haDialog.close());
+
+    haForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const pesan = haPesan.value.trim();
+      if (!pesan) { haFeedback.textContent = "Pesan keluhan wajib diisi."; haFeedback.className = "feedback error"; return; }
+      const btn = document.getElementById("hubungiAdminKirim");
+      btn.disabled = true;
+      try {
+        const result = await postJson({ action: "kirimKeluhan", pesan });
+        haDialog.close();
         const text = encodeURIComponent(
-          `Halo admin, saya ${state.user.nama} (${state.user.id}) mengirim keluhan dengan tiket ${result.data.idTiket}: ${pesan}`
+          `Halo admin, saya ${state.user ? state.user.nama : session.nama} (${session.id}) mengirim keluhan dengan tiket ${result.data.idTiket}: ${pesan}`
         );
         window.open(`https://wa.me/${APP_CONFIG.WHATSAPP_ADMIN}?text=${text}`, "_blank", "noopener");
+        alert(`Keluhan terkirim (tiket ${result.data.idTiket}). WhatsApp admin dibuka di tab baru.`);
       } catch (error) {
-        setFeedback(el.complaintFeedback, error.message || "Gagal mengirim keluhan.", "error");
-      }
-    }
+        haFeedback.textContent = error.message || "Gagal mengirim keluhan.";
+        haFeedback.className = "feedback error";
+      } finally { btn.disabled = false; }
+    });
 
     function handleUpgrade() {
       const text = encodeURIComponent(`Halo admin, saya ${session.nama} (${session.id}) ingin upgrade paket internet.`);
@@ -950,9 +1057,12 @@ function formatCurrency(value) {
     el.payButton.addEventListener("click", handlePay);
     el.upgradeButton.addEventListener("click", handleUpgrade);
     el.logoutButton.addEventListener("click", logout);
-    el.complaintForm.addEventListener("submit", handleComplaint);
+    chat.form.addEventListener("submit", handleChat);
 
-    if (session && session.role === "client" && session.token) loadDashboard();
+    if (session && session.role === "client" && session.token) {
+      loadDashboard();
+      chatAddBubble("bot", "Halo! Saya Asisten AI ThiNet. Ada yang bisa dibantu seputar jaringan, tagihan, atau paket Anda?", false);
+    }
   </script>
 </body>
 </html>

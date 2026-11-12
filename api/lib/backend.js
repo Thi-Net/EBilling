@@ -494,6 +494,15 @@ async function getUser(id, password) {
   };
 }
 
+// Auto-reconcile ringan saat dashboard dibuka (cooldown 2 menit) — sinkron pembayaran walau webhook Midtrans gagal.
+let lastAutoReconcile = 0;
+async function autoReconcileIfNeeded() {
+  const now = Date.now();
+  if (now - lastAutoReconcile < 2 * 60 * 1000) return;
+  lastAutoReconcile = now;
+  try { await reconcilePending(); } catch (e) { console.error("auto-reconcile:", e.message); }
+}
+
 async function getDashboardClient(idPelanggan) {
   await autoReconcileIfNeeded();
   const p = await findPelangganById(idPelanggan);

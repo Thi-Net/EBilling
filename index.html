@@ -955,7 +955,9 @@
     @media (max-width: 1024px) {
       .nav-links { display: none; }
       .hamburger { display: flex; }
-      .header-actions .btn-outline-white { display: none; }
+      /* Tombol Login Members tetap tampil di samping hamburger */
+      .header-actions .btn-outline-white { display: inline-flex; padding: 8px 14px; font-size: .82rem; gap: 6px; }
+      .header-actions .btn-outline-white svg { width: 15px; height: 15px; }
       .split { grid-template-columns: 1fr; gap: 40px; }
       .footer-grid { grid-template-columns: 1fr 1fr; gap: 36px; }
       .footer-about { grid-column: 1 / -1; }
@@ -1013,7 +1015,7 @@
         <div class="header-actions">
           <a class="btn-outline-white" href="#login">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-            Members Area
+            Login Members
           </a>
           <button class="hamburger" id="hamburger" aria-label="Buka menu" aria-expanded="false">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -1027,7 +1029,7 @@
         <a href="#fitur">Fitur</a>
         <a href="#android">Android</a>
         <a href="#pembayaran">Pembayaran</a>
-        <a href="#login">Members Area</a>
+        <a href="#login">Login Members</a>
       </div>
     </div>
   </header>
@@ -1394,7 +1396,7 @@
             <li><a href="#fitur">Fitur</a></li>
             <li><a href="#android">Android</a></li>
             <li><a href="#pembayaran">Pembayaran</a></li>
-            <li><a href="#login">Members Area</a></li>
+            <li><a href="#login">Login Members</a></li>
           </ul>
         </div>
 

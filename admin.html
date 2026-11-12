@@ -1080,7 +1080,7 @@
     crud.form.addEventListener("submit", async (event) => {
       event.preventDefault();
       const payload = {
-        mode: crudMode,
+        mode: crudMode === "edit" ? "update" : crudMode,
         id: crud.id.value.trim(),
         nama: crud.nama.value.trim(),
         paket: crud.paket.value.trim(),

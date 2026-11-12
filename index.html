@@ -455,9 +455,9 @@
     /* ---------- PRICING ---------- */
     .package-grid {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 26px;
-      max-width: 900px;
+      max-width: 1140px;
       margin: 0 auto;
     }
 
@@ -962,6 +962,7 @@
       .split { grid-template-columns: 1fr; gap: 40px; }
       .footer-grid { grid-template-columns: 1fr 1fr; gap: 36px; }
       .footer-about { grid-column: 1 / -1; }
+      .package-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
 
     @media (max-width: 768px) {
@@ -1163,43 +1164,59 @@
       <div class="section-head reveal">
         <span class="eyebrow">Paket Layanan</span>
         <h2>Pilih Paket Sesuai Kebutuhan Anda</h2>
-        <p>Pilihan 2 paket dengan harga yang terjangkau dan kualitas terbaik untuk rumah maupun usaha Anda.</p>
+        <p>Pilihan 3 paket dengan harga yang terjangkau dan kualitas terbaik untuk rumah maupun usaha Anda.</p>
       </div>
 
       <div class="package-grid">
         <article class="package-card reveal">
           <span class="plan-tag">Paket Hemat</span>
-          <h3>Paket Cermat</h3>
+          <h3>Paket A — 50 Mbps</h3>
           <p class="plan-sub">Pilihan tepat untuk kebutuhan harian keluarga kecil</p>
           <div class="price">
             <span class="amount">Rp100.000</span>
             <span class="per">/ bulan</span>
           </div>
           <ul>
+            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Kecepatan 50 Mbps</li>
             <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Untuk browsing, belajar, dan streaming ringan</li>
-            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Tagihan bulanan tetap</li>
             <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Cocok untuk 2–3 device</li>
           </ul>
-          <a class="btn-soft" href="https://wa.me/62895630408308?text=Halo%20admin%2C%20saya%20tertarik%20Paket%20Cermat%20Rp100.000" target="_blank" rel="noopener">Pilih Paket Cermat</a>
+          <a class="btn-soft" href="https://wa.me/62895630408308?text=Halo%20admin%2C%20saya%20tertarik%20Paket%20A%2050Mbps%20Rp100.000" target="_blank" rel="noopener">Pilih Paket A</a>
         </article>
 
         <article class="package-card highlight reveal">
           <span class="plan-tag">Paling Laris</span>
-          <h3>Paket Ngebut</h3>
+          <h3>Paket B — 100 Mbps</h3>
           <p class="plan-sub">Untuk keluarga aktif internet dan kebutuhan usaha</p>
           <div class="price">
             <span class="amount">Rp200.000</span>
             <span class="per">/ bulan</span>
           </div>
           <ul>
+            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Kecepatan 100 Mbps</li>
             <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Untuk streaming, meeting, CCTV, dan multi-device</li>
-            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Prioritas untuk keluarga aktif internet</li>
             <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Kualitas internet lebih baik dan latensi rendah</li>
           </ul>
-          <a class="btn-gradient" href="https://wa.me/62895630408308?text=Halo%20admin%2C%20saya%20tertarik%20Paket%20Ngebut%20Rp200.000" target="_blank" rel="noopener">
-            Pilih Paket Ngebut
+          <a class="btn-gradient" href="https://wa.me/62895630408308?text=Halo%20admin%2C%20saya%20tertarik%20Paket%20B%20100Mbps%20Rp200.000" target="_blank" rel="noopener">
+            Pilih Paket B
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
           </a>
+        </article>
+
+        <article class="package-card reveal">
+          <span class="plan-tag">Paket Sultan</span>
+          <h3>Paket C — 200 Mbps</h3>
+          <p class="plan-sub">Kecepatan maksimal untuk usaha, gamer, dan smart home</p>
+          <div class="price">
+            <span class="amount">Rp300.000</span>
+            <span class="per">/ bulan</span>
+          </div>
+          <ul>
+            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Kecepatan 200 Mbps</li>
+            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Untuk gaming, streaming 4K, dan banyak device sekaligus</li>
+            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Prioritas tertinggi jaringan ThiNet</li>
+          </ul>
+          <a class="btn-soft" href="https://wa.me/62895630408308?text=Halo%20admin%2C%20saya%20tertarik%20Paket%20C%20200Mbps%20Rp300.000" target="_blank" rel="noopener">Pilih Paket C</a>
         </article>
       </div>
     </div>

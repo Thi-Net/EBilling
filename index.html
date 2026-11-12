@@ -955,9 +955,10 @@
     @media (max-width: 1024px) {
       .nav-links { display: none; }
       .hamburger { display: flex; }
-      /* Tombol Login Members tetap tampil di samping hamburger */
-      .header-actions .btn-outline-white { display: inline-flex; padding: 8px 14px; font-size: .82rem; gap: 6px; }
-      .header-actions .btn-outline-white svg { width: 15px; height: 15px; }
+      /* Tombol Login Members tetap tampil di samping hamburger — di HP hanya ikon pintu terbuka */
+      .header-actions .btn-outline-white { display: inline-flex; align-items: center; justify-content: center; padding: 8px; font-size: .82rem; gap: 6px; }
+      .header-actions .btn-outline-white svg { width: 17px; height: 17px; }
+      .header-actions .btn-login .btn-login-text { display: none; }
       .split { grid-template-columns: 1fr; gap: 40px; }
       .footer-grid { grid-template-columns: 1fr 1fr; gap: 36px; }
       .footer-about { grid-column: 1 / -1; }
@@ -1013,9 +1014,9 @@
         </nav>
 
         <div class="header-actions">
-          <a class="btn-outline-white" href="#login">
+          <a class="btn-outline-white btn-login" href="#login" aria-label="Login Members" title="Login Members">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-            Login Members
+            <span class="btn-login-text">Login Members</span>
           </a>
           <button class="hamburger" id="hamburger" aria-label="Buka menu" aria-expanded="false">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>

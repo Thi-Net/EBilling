@@ -471,6 +471,7 @@ async function kelolaPelanggan(body) {
     const rows = snap.docs.map((d0) => {
       const r = d0.data();
       return { orderId: r.orderId, idPelanggan: r.idPelanggan, periode: r.periode, status: r.status,
+        nominal: r.nominal, hariTagih: r.hariTagih, periodeMulai: r.periodeMulai, periodeAkhir: r.periodeAkhir,
         tgl: r.createdAt && r.createdAt.toDate ? r.createdAt.toDate().toISOString() : String(r.createdAt || "") };
     });
     return rows;

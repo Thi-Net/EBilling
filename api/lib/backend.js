@@ -905,11 +905,13 @@ async function getDashboardAdmin(idAdmin) {
 // ---------------------------------------------------------------------------
 // Chatbot AI (provider OpenAI-compatible: LLM_BASE_URL, LLM_API_KEY, LLM_MODEL)
 // ---------------------------------------------------------------------------
+function formatRupiah_(n) { return "Rp" + Number(n || 0).toLocaleString("id-ID"); }
+
 async function chatAi(idPelanggan, riwayat) {
   const { LLM_BASE_URL, LLM_API_KEY, LLM_MODEL } = process.env;
-  if (!LLM_BASE_URL || !LLM_API_KEY || !LLM_MODEL) throw new Error("Layanan chat sedang tidak tersedia.");
   const msgs = Array.isArray(riwayat) ? riwayat.slice(-12) : [];
   if (!msgs.length) throw new Error("Input tidak valid.");
+  const pesanTerakhir = msgs[msgs.length - 1].content;
   for (const m of msgs) {
     if (!m || typeof m.content !== "string" || !m.content.trim() || m.content.length > 4000) throw new Error("Input tidak valid.");
     if (!["user", "assistant"].includes(m.role)) throw new Error("Input tidak valid.");
@@ -951,21 +953,50 @@ Aturan:
 - Jika keluhan tidak bisa diselesaikan sendiri, sarankan pelanggan menekan tombol "Hubungi Admin" di bawah jawabanmu.
 - Tidak punya kemampuan mengubah data/tagihan. Jangan janji tindakan yang tidak bisa kamu lakukan.
 - Topik di luar layanan ThiNet: tolak dengan sopan dan arahkan kembali ke layanan internet.`;
-  const res = await fetch(`${LLM_BASE_URL.replace(/\/+$/, "")}/chat/completions`, {
-    method: "post",
-    headers: { Authorization: `Bearer ${LLM_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: LLM_MODEL,
-      messages: [{ role: "system", content: system }, ...msgs],
-      stream: false,
-      max_completion_tokens: 2500,
-      max_tokens: 2500,
-      temperature: 0.4,
-    }),
-  });
+  // Template fallback: dipakai bila LLM mati/gagal agar bot tetap menjawab.
+  const jawabanTemplate = (pesanTerakhir) => {
+    const q = String(pesanTerakhir || "").toLowerCase();
+    const t = konteks.tagihan;
+    const infoTagihan = t
+      ? `Tagihan Anda saat ini: ${formatRupiah_(t.nominal)} untuk periode ${t.periode}, jatuh tempo ${t.jatuhTempo}.`
+      : "Tidak ada tagihan aktif saat ini — status pembayaran LUNAS.";
+    if (/(tagih|bayar|lunas|due|tempo|invoice|midtrans|qris|gopay|transfer)/.test(q)) {
+      return `${infoTagihan}\n\nCara bayar: tekan tombol "Bayar Sekarang" di dashboard (QRIS / GoPay / transfer via Midtrans).\n\nSudah bayar tapi status belum berubah? Tunggu beberapa menit, atau gunakan tombol "Hubungi Admin" di bawah agar kami periksa.`;
+    }
+    if (/(lambat|lemot|putus|mati|ganggu|down|error|internet|wifi|onu|router|kabel|sinyal|tidak bisa konek|disconnect)/.test(q)) {
+      return `Untuk gangguan koneksi, coba langkah ini:\n1. Restart router/ONU (matikan 30 detik lalu nyalakan).\n2. Cek kabel LAN/fiber terpasang rapat.\n3. Cek lampu indikator LOS/PON di modem — jika merah/berkedip, cabut fiber lalu pasang kembali.\n4. Tes dengan satu perangkat saja.\n\nJika tetap bermasalah, tekan tombol "Hubungi Admin" di bawah — tim kami akan periksa jaringan Anda.`;
+    }
+    if (/(upgrade|ganti paket|paket|niche|harga|tarif)/.test(q)) {
+      return `Paket Anda saat ini: ${konteks.paket} (${formatRupiah_(konteks.harga)}/bulan).\nPaket tersedia: ${konteks.daftarPaketTersedia}.\n\nUntuk upgrade/perubahan paket, gunakan tombol "Hubungi Admin" di bawah — admin akan memproses permintaan Anda.`;
+    }
+    if (/(isolir|blokir|diblokir|aktif)/.test(q)) {
+      return `Status layanan Anda: ${konteks.statusSistem}. ${infoTagihan}\n\nLayanan terisolir terjadi bila ada tagihan yang melewati jatuh tempo. Bayar tagihan lewat tombol "Bayar Sekarang", dan layanan aktif kembali otomatis.\n\nJika sudah bayar namun belum aktif, tekan "Hubungi Admin" di bawah.`;
+    }
+    return `Halo ${konteks.nama}! Untuk bantuan lebih lanjut, silakan jelaskan kendala Anda (gangguan jaringan, tagihan, atau paket). ${konteks.nama ? "" : ""}\n\nBila butuh langsung ditangani admin, tekan tombol "Hubungi Admin" di bawah.`;
+  };
+
+  if (!LLM_BASE_URL || !LLM_API_KEY || !LLM_MODEL) return { balasan: jawabanTemplate(pesanTerakhir) };
+  let res;
+  try {
+    res = await fetch(`${LLM_BASE_URL.replace(/\/+$/, "")}/chat/completions`, {
+      method: "post",
+      headers: { Authorization: `Bearer ${LLM_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: LLM_MODEL,
+        messages: [{ role: "system", content: system }, ...msgs],
+        stream: false,
+        max_completion_tokens: 2500,
+        max_tokens: 2500,
+        temperature: 0.4,
+      }),
+    });
+  } catch (e) {
+    // LLM tidak dapat dihubungi → fallback template
+    return { balasan: jawabanTemplate(pesanTerakhir) };
+  }
   if (!res.ok) {
     console.error("LLM error:", res.status, (await res.text().catch(() => "")).slice(0, 300));
-    throw new Error("Layanan chat sedang sibuk, coba lagi beberapa saat.");
+    return { balasan: jawabanTemplate(pesanTerakhir) };
   }
   const raw = await res.text();
   let out;
@@ -990,7 +1021,7 @@ Aturan:
       } catch (e) {}
     }
   }
-  if (!String(balasan).trim()) throw new Error("Layanan chat sedang sibuk, coba lagi beberapa saat.");
+  if (!String(balasan).trim()) return { balasan: jawabanTemplate(pesanTerakhir) };
   return { balasan: String(balasan).slice(0, 4000) };
 }
 

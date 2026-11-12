@@ -1035,8 +1035,16 @@
       crud.id.value = customer ? customer.id : "";
       crud.id.disabled = mode === "edit";
       crud.nama.value = customer ? customer.nama : "";
-      isiDropdownPaket(customer ? customer.paket : "");
-      if (customer) crud.harga.value = customer.harga;
+      // Pastikan daftar paket sudah termuat sebelum dialog dipakai (hindari dropdown kosong).
+      const isiDlg = () => {
+        isiDropdownPaket(customer ? customer.paket : "");
+        if (customer) crud.harga.value = customer.harga;
+      };
+      if (!daftarPaket.length) {
+        muatPaket(customer ? customer.paket : "").then(isiDlg).catch(isiDlg);
+      } else {
+        isiDlg();
+      }
       crud.password.value = "";
       crud.password.required = mode === "create";
       crud.password.placeholder = mode === "edit" ? "(kosongkan bila tidak diganti)" : "";
@@ -1131,8 +1139,12 @@
     }
 
     function isiDropdownPaket(terpilih) {
-      const opts = daftarPaket.map((p) =>
+      let opts = daftarPaket.map((p) =>
         `<option value="${escapeHtml(p.nama)}" data-nominal="${p.nominal}" ${p.nama === terpilih ? "selected" : ""}>${escapeHtml(p.nama)}</option>`).join("");
+      // Fallback: paket lama pelanggan yang tidak ada di daftar tetap bisa dipilih.
+      if (terpilih && !daftarPaket.some((p) => p.nama === terpilih)) {
+        opts += `<option value="${escapeHtml(terpilih)}" selected>${escapeHtml(terpilih)}</option>`;
+      }
       paket.select.innerHTML = opts || '<option value="">(belum ada paket)</option>';
       const sel = paket.select.selectedOptions[0];
       if (sel) paket.harga.value = sel.dataset.nominal || "";

@@ -32,7 +32,7 @@ export default async function handler(req, res) {
   const isAction = Object.prototype.hasOwnProperty.call(body, "action");
   if (isAction) {
     if (!ACTIONS.has(body.action)) return fail(400, "Aksi tidak diizinkan.");
-    if (Object.keys(body).some((key) => !["action", "token", "id", "password", "idPelanggan", "pesan", "idTiket", "mode", "nama", "paket", "harga", "noWhatsApp", "statusSistem", "tglPasang", "password"].includes(key))) {
+    if (Object.keys(body).some((key) => !["action", "token", "id", "password", "idPelanggan", "pesan", "idTiket", "mode", "nama", "paket", "harga", "noWhatsApp", "statusSistem", "tglPasang", "password", "nominal"].includes(key))) {
       return fail(400, "Parameter tidak diizinkan.");
     }
   } else {

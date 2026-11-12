@@ -287,7 +287,7 @@ async function ensureMonthlyInvoice(idPelanggan, now = new Date()) {
   const p = nowJakartaParts(now);
   const todayIso = `${p.year}-${p.month}-${p.day}`;
   // Kandidat: periode yang berakhir tgl 20 bulan sebelumnya → mulai tgl 21 dua bulan lalu.
-  const endIso = isoFromDaySerial(daySerialFromIso(`${p.year}-${p.month}-01`) - 11); // 20 bulan sebelumnya
+  const endIso = isoFromDaySerial(daySerialFromIso(`${p.year}-${p.month}-01`) - 12); // tgl 20 bulan sebelumnya
   const startIso = servicePeriodStartIso(endIso); // 21 bulan sebelumnya-1... dihitung dari endIso
   // servicePeriodStartIso(endIso): endIso tgl 20 → periode berjalan mulai 21 bulan sebelumnya. BENAR.
   const customer = await findPelangganById(idPelanggan);

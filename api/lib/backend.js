@@ -227,8 +227,18 @@ function prorateNominal(harga, daysUsed, periodStartIso) {
 function periodStartIsoFromLabel(label) {
   const s = String(label);
   if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  // Format lama "YYYY-MM" (bulan kalender): tagihan menunggak lama — jatuh tempo tgl 20 bulan itu
+  // → periode layanan berakhir 20 bulan itu → mulai tgl 21 dua bulan sebelumnya... TIDAK: periode
+  // berakhir 20 bulan M dimulai 21 bulan M-1. "YYYY-MM" = due tgl 20 bulan M → mulai 21 bulan M-1.
+  // Namun untuk mewujudkan kasus tunggakan (bayar telat >1 bln → muncul tagihan berikutnya),
+  // tagihan migrasi diperlakukan sebagai periode yang BERAKHIR tgl 20 bulan SEBELUM bulan M (due 20 (M-1))
+  // → mulai 21 bulan M-2.
   const m = s.match(/^(\d{4})-(\d{2})$/);
-  if (m) return `${m[1]}-${m[2]}-${String(PERIOD_START_DAY).padStart(2, "0")}`;
+  if (m) {
+    const y = Number(m[1]), mo = Number(m[2]);
+    const d = new Date(Date.UTC(y, mo - 3, PERIOD_START_DAY)); // mulai 21, dua bulan sebelum M
+    return isoFromDaySerial(Math.floor(d.getTime() / 86400000));
+  }
   return "";
 }
 
@@ -866,7 +876,7 @@ export async function reconcilePending() {
         aktifkanUser(id);
         await logPembayaran({ order_id: inv.orderId, gross_amount: String(inv.nominal), payment_type: cur.payment_type }, "SETTLEMENT");
         await updateInvoice(doc.id, { status: "SETTLEMENT" });
-        try { await ensureMonthlyInvoice(id, new Date()); } catch (e) {}
+        try { await terbitkanTagihanBerantai(id, new Date()); } catch (e) { console.error("berantai reconcile:", e); }
         await syncStatusPembayaran(id);
         disinkron++;
       } else if (["expire", "cancel", "deny"].includes(status) && inv.status === "PENDING") {
@@ -889,6 +899,10 @@ export async function dailyJob() {
     if (!p.id) continue;
     const st = String(p.statusSistem || "").toUpperCase();
     if (await ensureMonthlyInvoice(p.id, now)) hasil.terbit++;
+    if (st === "AKTIF") {
+      const berantai = await terbitkanTagihanBerantai(p.id, now);
+      if (berantai) hasil.terbit++;
+    }
     const invoices = await allInvoices(p.id);
     const outstanding = findLatestUnpaid(invoices);
     const paid = !outstanding;

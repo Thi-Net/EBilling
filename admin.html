@@ -586,9 +586,7 @@
       </section>
 
       
-    </div>
-
-<section class="card broadcast-wrap">
+    <section class="card broadcast-wrap">
       <aside class="card">
           <h2>
             <span class="ico">
@@ -610,6 +608,9 @@
           </form>
         </aside>
       </section>
+</div>
+
+
     <!-- ======== TAB KELOLA DATA PELANGGAN ======== -->
     <div id="panelKelola" class="tab-panel">
       
@@ -893,6 +894,7 @@
         btn.classList.add("active");
         document.getElementById("panel" + btn.dataset.tab.charAt(0).toUpperCase() + btn.dataset.tab.slice(1)).classList.add("active");
         if (btn.dataset.tab === "dashboard") renderCharts();
+        if (btn.dataset.tab === "paket") muatPaket(paket.select.value);
       });
     });
 

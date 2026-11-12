@@ -412,9 +412,13 @@ async function kelolaPelanggan(body) {
     const wa = String(body.noWhatsApp || "").replace(/[^0-9]/g, "");
     const exists = await findPelangganById(id);
     if (exists) throw new Error("ID pelanggan sudah digunakan.");
+    const tglPasang = body.tglPasang ? new Date(String(body.tglPasang)) : new Date();
+    const statusSistem = ["AKTIF", "TERISOLIR"].includes(String(body.statusSistem || "").toUpperCase())
+      ? String(body.statusSistem).toUpperCase() : "AKTIF";
+    if (isNaN(tglPasang.getTime())) throw new Error("Tanggal pasang tidak valid.");
     await fs.collection(COL.pelanggan).doc(id).set({
       id, nama, paket, harga, password,
-      statusSistem: "AKTIF", tglPasang: new Date(),
+      statusSistem, tglPasang,
       tglJatuhTempo: computeDueDate(), statusPembayaran: "LUNAS", noWhatsApp: wa,
     });
     return { id, pesan: "Pelanggan ditambahkan." };

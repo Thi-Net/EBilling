@@ -97,7 +97,7 @@ function requiredText(v, max) {
 }
 export function errorResponse(error) {
   const message = error && error.message ? error.message : "";
-  const safe = /^(Gunakan |Input |JSON |Silakan |Sesi |Akses |Action |ID atau password |Terlalu banyak |Webhook |Verifikasi pembayaran |Pembayaran tidak |Nominal |Tidak ada tagihan |Tagihan |Invoice |Pelanggan |Paket |Paket sudah )/.test(message);
+  const safe = /^(Gunakan |Input |JSON |Silakan |Sesi |Akses |Action |ID atau password |Terlalu banyak |Webhook |Verifikasi pembayaran |Pembayaran tidak |Nominal |Pilih |Tidak ada tagihan |Tagihan |Invoice |Pelanggan |Paket |Paket sudah )/.test(message);
   return { success: false, message: safe ? message : "Permintaan gagal. Hubungi administrator." };
 }
 

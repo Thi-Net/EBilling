@@ -957,6 +957,7 @@ Aturan:
     body: JSON.stringify({
       model: LLM_MODEL,
       messages: [{ role: "system", content: system }, ...msgs],
+      stream: false,
       max_completion_tokens: 2500,
       max_tokens: 2500,
       temperature: 0.4,
@@ -966,10 +967,29 @@ Aturan:
     console.error("LLM error:", res.status, (await res.text().catch(() => "")).slice(0, 300));
     throw new Error("Layanan chat sedang sibuk, coba lagi beberapa saat.");
   }
-  const out = await res.json();
-  const choice = out && out.choices && out.choices[0] && out.choices[0].message;
-  // Model reasoning kadang menaruh teks di reasoning_content dgn content null.
-  const balasan = (choice && (choice.content || choice.reasoning_content)) || "";
+  const raw = await res.text();
+  let out;
+  try { out = JSON.parse(raw); } catch (e) { out = null; }
+  let balasan = "";
+  if (out && out.choices && out.choices[0] && out.choices[0].message) {
+    // Respons JSON biasa (model reasoning kadang isi reasoning_content dgn content null).
+    const m = out.choices[0].message;
+    balasan = m.content || m.reasoning_content || "";
+  } else if (raw.trimStart().startsWith("data:")) {
+    // Provider membalas SSE/stream walau stream:false → gabungkan semua delta.content.
+    for (const line of raw.split("\n")) {
+      const s = line.trim();
+      if (!s.startsWith("data:")) continue;
+      const payload = s.slice(5).trim();
+      if (!payload || payload === "[DONE]") continue;
+      try {
+        const chunk = JSON.parse(payload);
+        const d = chunk.choices && chunk.choices[0] && (chunk.choices[0].delta || chunk.choices[0].message);
+        if (d && typeof d.content === "string") balasan += d.content;
+        else if (d && typeof d.reasoning_content === "string") balasan += d.reasoning_content;
+      } catch (e) {}
+    }
+  }
   if (!String(balasan).trim()) throw new Error("Layanan chat sedang sibuk, coba lagi beberapa saat.");
   return { balasan: String(balasan).slice(0, 4000) };
 }

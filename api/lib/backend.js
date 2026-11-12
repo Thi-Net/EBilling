@@ -537,11 +537,6 @@ async function kelolaPelanggan(body) {
     return { id, pesan: "Pelanggan dihapus." };
   }
 
-  if (body.action === "kelolaPaket") {
-    await requireRole(session, "admin");
-    return { success: true, data: await kelolaPaket(body) };
-  }
-
   throw new Error("Action tidak dikenali.");
 }
 
@@ -637,6 +632,11 @@ export async function handleAction(body) {
   if (body.action === "login") return handleLogin(body);
 
   const session = await requireSession(body.token);
+  if (body.action === "kelolaPaket") {
+    await requireRole(session, "admin");
+    return { success: true, data: await kelolaPaket(body) };
+  }
+
   switch (body.action) {
     case "logout":
       await db().collection(COL.sesi).doc(body.token).delete().catch(() => {});

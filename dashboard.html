@@ -821,7 +821,7 @@ function formatCurrency(value) {
 
       el.welcomeText.textContent = `${data.user.nama} • ${data.user.id}`;
       if (String(data.user.statusSistem).toUpperCase() === "TERISOLIR") {
-        const bulanTagihan = data.user.periodeTagihan ? formatPeriodeId_(data.user.periodeTagihan) : "";
+        const bulanTagihan = data.user.periodeTagihan ? String(data.user.periodeTagihan) : "";
         el.heroMessage.textContent = bulanTagihan
           ? `SILAHKAN BAYAR TAGIHAN BULAN ${bulanTagihan}.`
           : "SILAHKAN BAYAR TAGIHAN.";

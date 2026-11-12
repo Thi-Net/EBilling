@@ -86,15 +86,6 @@ function previousMonthKey(date = new Date()) {
   const k = periodKeyOfDate(date);
   return k - 1;
 }
-function periodToString(key) {
-  const y = Math.floor(key / 12);
-  const m = key % 12;
-  return `${y}-${String(m + 1).padStart(2, "0")}`;
-}
-function periodKeyFromString(s) {
-  const parts = String(s).split("-");
-  return Number(parts[0]) * 12 + (Number(parts[1]) - 1);
-}
 function toNumber(v) { const n = Number(v); return isNaN(n) ? 0 : n; }
 function tsJakartaStamp(date = new Date()) {
   const p = nowJakartaParts(date);
@@ -132,7 +123,7 @@ function findLatestUnpaid(invoices) {
   for (const inv of invoices) {
     const st = String(inv.status).toUpperCase();
     if (st === "SETTLEMENT" || st === "FAILED") continue;
-    const key = periodKeyFromString(inv.periode);
+    const key = periodOrderKey(inv.periode);
     if (isNaN(key)) continue;
     if (key >= latestKey) { latestKey = key; latest = inv; }
   }
@@ -142,7 +133,7 @@ function findLatestSettledPeriod(invoices) {
   let latestKey = null;
   for (const inv of invoices) {
     if (String(inv.status) !== "SETTLEMENT") continue;
-    const key = periodKeyFromString(inv.periode);
+    const key = periodOrderKey(inv.periode);
     if (!isNaN(key) && (latestKey === null || key > latestKey)) latestKey = key;
   }
   return latestKey;
@@ -179,28 +170,157 @@ async function logPembayaran(payload, status) {
   });
 }
 
+
+// ---------------------------------------------------------------------------
+// Periode layanan prabayar: tgl 21 (bulan M) s/d tgl 20 (bulan M+1).
+// Label periode disimpan sebagai tanggal MULAI: "YYYY-MM-DD" (selalu tgl 21).
+// ---------------------------------------------------------------------------
+const PERIOD_START_DAY = 21;
+
+// Serial hari dari tanggal ISO yyyy-mm-dd (timezone-agnostic).
+function daySerialFromIso(iso) {
+  const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return NaN;
+  return Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])) / 86400000;
+}
+function isoFromDaySerial(serial) {
+  const d = new Date(serial * 86400000);
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+}
+
+// Periode layanan yang BERJALAN pada tanggal ISO tertentu (mulai tgl 21 terakhir yang sudah lewat).
+function servicePeriodStartIso(iso) {
+  const serial = daySerialFromIso(iso);
+  const d = new Date(serial * 86400000);
+  // tgl 21 bulan ini (UTC, cukup untuk perhitungan hari)
+  let start = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), PERIOD_START_DAY));
+  if (serial < daySerialFromIso(isoFromDaySerial(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), PERIOD_START_DAY)) ) ) {}
+  if (d.getUTCDate() < PERIOD_START_DAY) {
+    start = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - 1, PERIOD_START_DAY));
+  }
+  return isoFromDaySerial(Math.floor(start.getTime() / 86400000));
+}
+
+// Tanggal akhir periode = tgl 20 bulan berikutnya setelah bulan mulai.
+function servicePeriodEndIso(startIso) {
+  const s = new Date(daySerialFromIso(startIso) * 86400000);
+  const end = new Date(Date.UTC(s.getUTCFullYear(), s.getUTCMonth() + 1, 20));
+  return isoFromDaySerial(Math.floor(end.getTime() / 86400000));
+}
+
+// Jatuh tempo = akhir periode (tgl 20 bulan kedua).
+function dueDateIsoOfPeriod(startIso) { return servicePeriodEndIso(startIso); }
+
+// Jumlah hari kalender periode (inklusif 21..20).
+function periodDayCount(startIso) {
+  return daySerialFromIso(servicePeriodEndIso(startIso)) - daySerialFromIso(startIso) + 1;
+}
+
+// Nominal prorate: hariPakai / hariKalenderPeriode * harga (dibulatkan ke rupiah).
+function prorateNominal(harga, daysUsed, periodStartIso) {
+  const total = periodDayCount(periodStartIso);
+  const n = Math.max(0, daysUsed);
+  return Math.round((n / total) * toNumber(harga));
+}
+
+// Kompatibilitas: periode lama "YYYY-MM" → perlakukan sebagai mulai tgl 21 bulan itu.
+function periodStartIsoFromLabel(label) {
+  const s = String(label);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  const m = s.match(/^(\d{4})-(\d{2})$/);
+  if (m) return `${m[1]}-${m[2]}-${String(PERIOD_START_DAY).padStart(2, "0")}`;
+  return "";
+}
+
+// Serial integer untuk urutan (mulai tgl 21).
+function periodOrderKey(label) {
+  const iso = periodStartIsoFromLabel(label);
+  if (!iso) return NaN;
+  return daySerialFromIso(iso);
+}
+
+function periodLabelForDashboard(startIso) {
+  // "Sep-Okt 2026" dari mulai 21 Sep.
+  const bulan = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+  const s = new Date(daySerialFromIso(startIso) * 86400000);
+  const e = new Date(daySerialFromIso(servicePeriodEndIso(startIso)) * 86400000);
+  const sM = bulan[s.getUTCMonth()], eM = bulan[e.getUTCMonth()];
+  return sM === eM ? `${sM} ${e.getUTCFullYear()}` : `${sM}-${eM} ${e.getUTCFullYear()}`;
+}
+
 // ---------------------------------------------------------------------------
 // siklus tagihan berantai
 // ---------------------------------------------------------------------------
-async function createInvoiceRow(idPelanggan, periodKey) {
+// Buat invoice untuk periode layanan mulai startIso (tgl 21). effectiveStart = hari pertama yang ditagih
+// (max(tglPasang, mulaiPeriode) atau tgl aktif kembali setelah isolir) → nominal prorate.
+async function createInvoiceRow(idPelanggan, startIso, effectiveStartIso) {
   const customer = await findPelangganById(idPelanggan);
   if (!customer) throw new Error("Pelanggan tidak ditemukan: " + idPelanggan);
-  const period = periodToString(periodKey);
+  const eff = effectiveStartIso && daySerialFromIso(effectiveStartIso) > daySerialFromIso(startIso)
+    ? effectiveStartIso : startIso;
+  const endIso = servicePeriodEndIso(startIso);
+  const daysUsed = Math.max(0, daySerialFromIso(endIso) - daySerialFromIso(eff) + 1);
+  const nominal = prorateNominal(customer.harga, daysUsed, startIso);
+  const label = periodLabelForDashboard(startIso);
   const orderId = `ORDER-${String(idPelanggan).replace(/[^A-Za-z0-9_-]/g, "_").slice(0, 24)}-${tsJakartaStamp()}`;
   const ref = await db().collection(COL.invoice).add({
-    orderId, idPelanggan: String(idPelanggan), nominal: toNumber(customer.harga),
-    period, periode: period, status: "PENDING", snapToken: "", redirectUrl: "",
+    orderId, idPelanggan: String(idPelanggan), nominal,
+    period: startIso, periode: startIso, periodeMulai: startIso, periodeAkhir: endIso,
+    periodeLabel: label, hariTagih: daysUsed, status: "PENDING", snapToken: "", redirectUrl: "",
     createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp(),
   });
-  return { orderId, period, docId: ref.id };
+  return { orderId, period: startIso, label, nominal, docId: ref.id };
 }
 async function ensureMonthlyInvoice(idPelanggan, now = new Date()) {
   const invoices = await allInvoices(idPelanggan);
-  if (findLatestUnpaid(invoices)) return null;
-  const candidateKey = previousMonthKey(now);
+  if (findLatestUnpaid(invoices)) return null; // satu tagihan aktif pada satu waktu
+  const p = nowJakartaParts(now);
+  const todayIso = `${p.year}-${p.month}-${p.day}`;
+  // Kandidat: periode yang berakhir tgl 20 bulan sebelumnya → mulai tgl 21 dua bulan lalu.
+  const endIso = isoFromDaySerial(daySerialFromIso(`${p.year}-${p.month}-01`) - 11); // 20 bulan sebelumnya
+  const startIso = servicePeriodStartIso(endIso); // 21 bulan sebelumnya-1... dihitung dari endIso
+  // servicePeriodStartIso(endIso): endIso tgl 20 → periode berjalan mulai 21 bulan sebelumnya. BENAR.
+  const customer = await findPelangganById(idPelanggan);
+  if (!customer) return null;
+  const tglPasangIso = String(customer.tglPasang || "").slice(0, 10);
+  if (tglPasangIso && daySerialFromIso(tglPasangIso) > daySerialFromIso(endIso)) return null; // belum ada pemakaian
   const lastSettledKey = findLatestSettledPeriod(invoices);
-  if (lastSettledKey !== null && candidateKey <= lastSettledKey) return null;
-  return createInvoiceRow(idPelanggan, candidateKey);
+  if (lastSettledKey !== null && lastSettledKey >= periodOrderKey(startIso)) return null; // sudah ditagih
+  const effStart = (tglPasangIso && daySerialFromIso(tglPasangIso) > daySerialFromIso(startIso))
+    ? tglPasangIso : startIso;
+  if (daySerialFromIso(effStart) > daySerialFromIso(endIso)) return null;
+  return createInvoiceRow(idPelanggan, startIso, effStart);
+}
+
+// Terbitkan invoice periode BERJALAN (mulai tgl 21 terakhir) bila belum ada & pelanggan memang pakai.
+// Prorate: hari mulai = tgl aktif kembali (kini) jika sebelumnya TERISOLIR; kalau sudah aktif sejak awal
+// periode, hari mulai = mulai periode (atau tglPasang bila lebih besar).
+async function terbitkanTagihanBerantai(idPelanggan, now = new Date()) {
+  const invoices = await allInvoices(idPelanggan);
+  if (findLatestUnpaid(invoices)) return null; // satu tagihan aktif pada satu waktu
+  const p = nowJakartaParts(now);
+  const todayIso = `${p.year}-${p.month}-${p.day}`;
+  const periodStart = servicePeriodStartIso(todayIso);
+  const periodEnd = servicePeriodEndIso(periodStart);
+  // sudah ada invoice utk periode ini (status apapun kecuali FAILED)?
+  const sudah = invoices.some((inv) => {
+    const k = periodOrderKey(inv.periode);
+    return !isNaN(k) && k === periodOrderKey(periodStart) && String(inv.status).toUpperCase() !== "FAILED";
+  });
+  if (sudah) return null;
+  const customer = await findPelangganById(idPelanggan);
+  if (!customer) return null;
+  const tglPasangIso = String(customer.tglPasang || "").slice(0, 10);
+  if (tglPasangIso && daySerialFromIso(tglPasangIso) > daySerialFromIso(periodEnd)) return null; // pasang di masa depan
+  // Hari pertama yang ditagih:
+  let eff = periodStart;
+  if (tglPasangIso && daySerialFromIso(tglPasangIso) > daySerialFromIso(eff)) eff = tglPasangIso;
+  // Jika hari ini masih sebelum akhir periode & pelanggan BARU aktif hari ini setelah isolir → prorate dari hari ini.
+  if (daySerialFromIso(todayIso) <= daySerialFromIso(periodEnd) && daySerialFromIso(todayIso) > daySerialFromIso(eff)) {
+    eff = todayIso;
+  }
+  if (daySerialFromIso(eff) > daySerialFromIso(periodEnd)) return null;
+  return createInvoiceRow(idPelanggan, periodStart, eff);
 }
 
 // ---------------------------------------------------------------------------
@@ -532,10 +652,14 @@ async function getDashboardClient(idPelanggan) {
     user: {
       id: p.id, nama: p.nama, paket: p.paket, harga: toNumber(p.harga),
       statusSistem: p.statusSistem, tglPasang: formatDateIso(p.tglPasang),
-      tglJatuhTempo: formatDateIso(computeDueDate()),
+      tglJatuhTempo: openInvoice
+        ? dueDateIsoOfPeriod(periodStartIsoFromLabel(String(openInvoice.periode)))
+        : formatDateIso(computeDueDate()),
       statusPembayaran: openInvoice ? "BELUM" : "LUNAS",
       adaTagihan: !!openInvoice,
-      periodeTagihan: openInvoice ? String(openInvoice.periode) : "",
+      periodeTagihan: openInvoice ? periodLabelForDashboard(periodStartIsoFromLabel(String(openInvoice.periode))) : "",
+      periodeTagihanMulai: openInvoice ? periodStartIsoFromLabel(String(openInvoice.periode)) : "",
+      periodeTagihanAkhir: openInvoice ? servicePeriodEndIso(periodStartIsoFromLabel(String(openInvoice.periode))) : "",
       noWhatsApp: p.noWhatsApp,
     },
     riwayat, informasi,
@@ -619,10 +743,10 @@ async function generateInvoiceMidtrans(idPelanggan) {
     const settled = findLatestSettledPeriod(invoices);
     const retryable = invoices
       .filter((inv) => ["EXPIRE", "EXPIRED", "CANCEL", "DENY", "FAILED"].includes(String(inv.status).toUpperCase()))
-      .filter((inv) => { const k = periodKeyFromString(inv.periode); return !isNaN(k) && (settled === null || k > settled); })
-      .sort((a, b) => periodKeyFromString(b.periode) - periodKeyFromString(a.periode))[0];
+      .filter((inv) => { const k = periodOrderKey(inv.periode); return !isNaN(k) && (settled === null || k > settled); })
+      .sort((a, b) => periodOrderKey(b.periode) - periodOrderKey(a.periode))[0];
     if (!retryable) throw new Error("Tidak ada tagihan yang harus dibayar.");
-    const fresh = await createInvoiceRow(idPelanggan, periodKeyFromString(retryable.periode));
+    const fresh = await createInvoiceRow(idPelanggan, periodOrderKey(retryable.periode));
     target = await findInvoiceByOrder(fresh.orderId);
   }
   if (String(target.status).toUpperCase() === "SETTLEMENT") throw new Error("Tagihan sudah dibayar.");
@@ -696,7 +820,7 @@ async function handleMidtransWebhookInner(payload) {
   await updateInvoice(invoice.docId, { status: "SETTLEMENT" });
   try { await db().collection("webhook_log").add({ tgl: FieldValue.serverTimestamp(), orderId: "[OK] " + payload.order_id, pesan: "Webhook settlement diproses." }); } catch (e) {}
 
-  try { await ensureMonthlyInvoice(id, new Date()); }
+  try { await terbitkanTagihanBerantai(id, new Date()); }
   catch (chainError) { console.error("Gagal terbitkan invoice berantai:", chainError); }
   await syncStatusPembayaran(id);
 
@@ -755,25 +879,40 @@ export async function reconcilePending() {
 export async function dailyJob() {
   const now = startOfDayJakarta(new Date());
   const day = jakartaDayOfMonth(now);
-  const due = computeDueDate(now);
   const pelanggan = await allPelanggan();
   const hasil = { terbit: 0, isolir: 0, sync: 0 };
   for (const p of pelanggan) {
     if (!p.id) continue;
+    const st = String(p.statusSistem || "").toUpperCase();
     if (await ensureMonthlyInvoice(p.id, now)) hasil.terbit++;
     const invoices = await allInvoices(p.id);
     const outstanding = findLatestUnpaid(invoices);
     const paid = !outstanding;
-    const st = String(p.statusSistem || "").toUpperCase();
+    // jatuh tempo mengikuti periode tagihan aktif (tgl 20 bulan kedua periode), fallback tgl 20 bulan ini.
+    let due = computeDueDate(now);
+    if (outstanding) {
+      const startIso = periodStartIsoFromLabel(outstanding.periode);
+      if (startIso) due = new Date(`${dueDateIsoOfPeriod(startIso)}T00:00:00+07:00`);
+    }
     await updatePelanggan(p.id, {
       tglJatuhTempo: due, statusPembayaran: paid ? "LUNAS" : "BELUM",
     });
     hasil.sync++;
+    // Isolir tgl 21+ HANYA jika ada tagihan yang jatuh temponya sudah lewat (belum lunas).
     if (day > DUE_DAY && !paid && st !== "TERISOLIR") {
-      await updatePelanggan(p.id, { statusSistem: "TERISOLIR" });
-      isolirUser(p.id);
-      hasil.isolir++;
+      const dueDay = Number(String(due.toISOString ? "" : "") ) || 0;
+      const dueIso = formatDateOnly(due);
+      if (dueIso && daySerialFromIso(dueIso) < daySerialFromIso(formatDateOnly(now))) {
+        await updatePelanggan(p.id, { statusSistem: "TERISOLIR" });
+        isolirUser(p.id);
+        hasil.isolir++;
+      }
     }
   }
   return { success: true, tanggal: formatDateIso(now), ...hasil };
+}
+
+function formatDateOnly(date) {
+  const p = nowJakartaParts(date);
+  return `${p.year}-${p.month}-${p.day}`;
 }

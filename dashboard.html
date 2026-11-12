@@ -715,6 +715,13 @@
   return map[m - 1] + " " + y;
 }
 
+function namaBulanTagihan(tglJatuhTempo) {
+      const bulan = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+      const d0 = new Date(tglJatuhTempo);
+      if (isNaN(d0.getTime())) return "";
+      return bulan[d0.getMonth()];
+    }
+
 function formatCurrency(value) {
       return new Intl.NumberFormat("id-ID", {
         style: "currency",
@@ -820,15 +827,18 @@ function formatCurrency(value) {
       state.informasi = data.informasi || [];
 
       el.welcomeText.textContent = `${data.user.nama} • ${data.user.id}`;
+      const adaTagihanAktif = data.user.adaTagihan !== false && data.user.statusPembayaran !== "LUNAS";
+      const bulanTagihan = adaTagihanAktif && data.user.tglJatuhTempo ? namaBulanTagihan(data.user.tglJatuhTempo) : "";
       if (String(data.user.statusSistem).toUpperCase() === "TERISOLIR") {
-        const bulanTagihan = data.user.periodeTagihan ? String(data.user.periodeTagihan) : "";
         el.heroMessage.textContent = bulanTagihan
-          ? `SILAHKAN BAYAR TAGIHAN BULAN ${bulanTagihan}.`
-          : "SILAHKAN BAYAR TAGIHAN.";
-      } else if (data.user.adaTagihan === false || data.user.statusPembayaran === "LUNAS") {
+          ? `Segera lakukan pembayaran tagihan bulan ${bulanTagihan} untuk mengaktifkan layanan.`
+          : "Segera lakukan pembayaran untuk mengaktifkan layanan.";
+      } else if (!adaTagihanAktif) {
         el.heroMessage.textContent = "TIDAK ADA TAGIHAN.";
       } else {
-        el.heroMessage.textContent = `Paket ${data.user.paket} aktif dengan tagihan ${formatCurrency(data.user.harga)} per bulan.`;
+        el.heroMessage.textContent = bulanTagihan
+          ? `Segera lakukan pembayaran tagihan bulan ${bulanTagihan} sebelum jatuh tempo supaya layanan tetap aktif.`
+          : `Paket ${data.user.paket} aktif dengan tagihan ${formatCurrency(data.user.harga)} per bulan.`;
       }
       renderStatus(data.user.statusSistem);
       const tidakAdaTagihan = data.user.adaTagihan === false || data.user.statusPembayaran === "LUNAS";

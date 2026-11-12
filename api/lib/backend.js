@@ -495,6 +495,7 @@ async function getUser(id, password) {
 }
 
 async function getDashboardClient(idPelanggan) {
+  await autoReconcileIfNeeded();
   const p = await findPelangganById(idPelanggan);
   if (!p) throw new Error("Pelanggan tidak ditemukan.");
   const invoices = await allInvoices(idPelanggan);

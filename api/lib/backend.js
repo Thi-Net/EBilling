@@ -241,7 +241,9 @@ function periodStartIsoFromLabel(label) {
   const m = s.match(/^(\d{4})-(\d{2})$/);
   if (m) {
     const y = Number(m[1]), mo = Number(m[2]);
-    const d = new Date(Date.UTC(y, mo - 3, PERIOD_START_DAY)); // mulai 21, dua bulan sebelum M
+    // Tagihan migrasi = tunggakan lama: periode berakhir 20 (M-1) → mulai 21 (M-3).
+    // (contoh: "2026-11" → periode 21 Agu-20 Sep, jatuh tempo 20 Okt)
+    const d = new Date(Date.UTC(y, mo - 4, PERIOD_START_DAY)); // Date.UTC mo-1=M-3 → offset -4
     return isoFromDaySerial(Math.floor(d.getTime() / 86400000));
   }
   return "";
@@ -924,6 +926,9 @@ export async function dailyJob() {
     if (!p.id) continue;
     const st = String(p.statusSistem || "").toUpperCase();
     if (await ensureMonthlyInvoice(p.id, now)) hasil.terbit++;
+    if (st === "AKTIF" && p.tglIsolir) {
+      try { const nxt = await terbitkanInvoiceBerikutnya(p.id, now); if (nxt) hasil.terbit++; } catch (e) {}
+    }
     const invoices = await allInvoices(p.id);
     const outstanding = findLatestUnpaid(invoices);
     const paid = !outstanding;

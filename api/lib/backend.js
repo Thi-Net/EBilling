@@ -957,17 +957,20 @@ Aturan:
     body: JSON.stringify({
       model: LLM_MODEL,
       messages: [{ role: "system", content: system }, ...msgs],
-      max_tokens: 700,
+      max_completion_tokens: 2500,
+      max_tokens: 2500,
       temperature: 0.4,
     }),
   });
   if (!res.ok) {
     console.error("LLM error:", res.status, (await res.text().catch(() => "")).slice(0, 300));
-    throw new Error("Layanan chat sedang tidak tersedia.");
+    throw new Error("Layanan chat sedang sibuk, coba lagi beberapa saat.");
   }
   const out = await res.json();
-  const balasan = out && out.choices && out.choices[0] && out.choices[0].message && out.choices[0].message.content;
-  if (!balasan) throw new Error("Layanan chat sedang tidak tersedia.");
+  const choice = out && out.choices && out.choices[0] && out.choices[0].message;
+  // Model reasoning kadang menaruh teks di reasoning_content dgn content null.
+  const balasan = (choice && (choice.content || choice.reasoning_content)) || "";
+  if (!String(balasan).trim()) throw new Error("Layanan chat sedang sibuk, coba lagi beberapa saat.");
   return { balasan: String(balasan).slice(0, 4000) };
 }
 

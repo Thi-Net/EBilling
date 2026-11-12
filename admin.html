@@ -587,6 +587,28 @@
       
     </div>
 
+<section class="card broadcast-wrap">
+      <aside class="card">
+          <h2>
+            <span class="ico">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 22 2 13 21 11 13 3 11z"/></svg>
+            </span>
+            Broadcast Informasi
+          </h2>
+          <p class="card-sub">Pesan akan muncul di dashboard pelanggan.</p>
+          <form id="broadcastForm">
+            <div class="form-group">
+              <label for="broadcastMessage">Pesan Broadcast</label>
+              <textarea id="broadcastMessage" placeholder="Contoh: Maintenance jaringan malam ini pukul 23.00 sampai 01.00 WIB." required></textarea>
+            </div>
+            <button class="button button-primary" type="submit">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Simpan Broadcast
+            </button>
+            <div id="broadcastFeedback" class="feedback"></div>
+          </form>
+        </aside>
+      </section>
     <!-- ======== TAB KELOLA DATA PELANGGAN ======== -->
     <div id="panelKelola" class="tab-panel">
       
@@ -618,28 +640,7 @@
     
     </div>
 
-    <section class="card broadcast-wrap">
-      <aside class="card">
-          <h2>
-            <span class="ico">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 22 2 13 21 11 13 3 11z"/></svg>
-            </span>
-            Broadcast Informasi
-          </h2>
-          <p class="card-sub">Pesan akan disimpan ke sheet <code>Data_Informasi</code> dan muncul di dashboard pelanggan.</p>
-          <form id="broadcastForm">
-            <div class="form-group">
-              <label for="broadcastMessage">Pesan Broadcast</label>
-              <textarea id="broadcastMessage" placeholder="Contoh: Maintenance jaringan malam ini pukul 23.00 sampai 01.00 WIB." required></textarea>
-            </div>
-            <button class="button button-primary" type="submit">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-              Simpan Broadcast
-            </button>
-            <div id="broadcastFeedback" class="feedback"></div>
-          </form>
-        </aside>
-      </section>
+    
 
       
     </section>
@@ -674,7 +675,7 @@
           <button type="button" id="paketBatal" class="btn-ghost">Batal</button>
           <button type="submit" id="paketSimpan" class="btn-primary">Simpan</button>
         </div>
-        <div id="paketFeedback" class="feedback"></div>
+        <div id="paketDialogFeedback" class="feedback"></div>
       </form>
     </dialog>
   </main>
@@ -1101,7 +1102,8 @@
       title: document.getElementById("paketTitle"),
       nama: document.getElementById("paketNama"),
       nominal: document.getElementById("paketNominal"),
-      feedback: document.getElementById("paketFeedback"),
+      feedback: document.getElementById("paketDialogFeedback"),
+      panelFeedback: document.getElementById("paketFeedback"),
       select: document.getElementById("crudPaket"),
       harga: document.getElementById("crudHarga"),
     };
@@ -1111,6 +1113,7 @@
     function paketFeedback(message, type) {
       paket.feedback.textContent = message || "";
       paket.feedback.className = "feedback " + (type || "");
+      if (paket.panelFeedback) { paket.panelFeedback.textContent = message || ""; paket.panelFeedback.className = "feedback " + (type || ""); }
     }
 
     function paketCall(payload) {

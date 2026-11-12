@@ -270,6 +270,23 @@ function periodLabelForDashboard(startIso) {
 // ---------------------------------------------------------------------------
 // Buat invoice untuk periode layanan mulai startIso (tgl 21). effectiveStart = hari pertama yang ditagih
 // (max(tglPasang, mulaiPeriode) atau tgl aktif kembali setelah isolir) → nominal prorate.
+// ---------------------------------------------------------------------------
+// Prorate ganda saat perubahan paket di tengah periode:
+// harga lama berlaku s/d (tglGantiPaket - 1), harga baru sejak tglGantiPaket.
+// Contoh: periode 21 Okt-20 Nov, ganti paket 12 Nov (100rb→200rb):
+//   nominal = (22*100rb + 9*200rb) / 31.
+// ---------------------------------------------------------------------------
+function gantiPaketInfo(customer) {
+  const raw = customer.tglGantiPaket;
+  const d = raw ? (raw.toDate ? raw.toDate() : new Date(raw)) : null;
+  if (!d || isNaN(d.getTime())) return null;
+  const p = nowJakartaParts(d);
+  const iso = `${p.year}-${p.month}-${p.day}`;
+  const hargaLama = toNumber(customer.hargaSebelumGanti);
+  if (!hargaLama || hargaLama <= 0) return null;
+  return { iso, hargaLama };
+}
+
 async function createInvoiceRow(idPelanggan, startIso, effectiveStartIso) {
   const customer = await findPelangganById(idPelanggan);
   if (!customer) throw new Error("Pelanggan tidak ditemukan: " + idPelanggan);
@@ -277,7 +294,17 @@ async function createInvoiceRow(idPelanggan, startIso, effectiveStartIso) {
     ? effectiveStartIso : startIso;
   const endIso = servicePeriodEndIso(startIso);
   const daysUsed = Math.max(0, daySerialFromIso(endIso) - daySerialFromIso(eff) + 1);
-  const nominal = prorateNominal(customer.harga, daysUsed, startIso);
+  const totalDays = periodDayCount(startIso);
+  const ganti = gantiPaketInfo(customer);
+  // Prorate ganda hanya bila tanggal ganti jatuh DI DALAM periode ini (setelah mulai, s/d akhir).
+  let nominal;
+  if (ganti && daySerialFromIso(ganti.iso) > daySerialFromIso(startIso) && daySerialFromIso(ganti.iso) <= daySerialFromIso(endIso)) {
+    const hariBaru = daySerialFromIso(endIso) - daySerialFromIso(ganti.iso) + 1;
+    const hariLama = Math.max(0, daysUsed - hariBaru);
+    nominal = Math.round(((hariLama * ganti.hargaLama + hariBaru * toNumber(customer.harga)) / totalDays));
+  } else {
+    nominal = prorateNominal(customer.harga, daysUsed, startIso);
+  }
   const label = periodLabelForDashboard(startIso);
   const orderId = `ORDER-${String(idPelanggan).replace(/[^A-Za-z0-9_-]/g, "_").slice(0, 24)}-${tsJakartaStamp()}`;
   const ref = await db().collection(COL.invoice).add({
@@ -286,6 +313,13 @@ async function createInvoiceRow(idPelanggan, startIso, effectiveStartIso) {
     periodeLabel: label, hariTagih: daysUsed, status: "PENDING", snapToken: "", redirectUrl: "",
     createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp(),
   });
+  // Info ganti paket sudah terpakai (periode ini menagihnya) → hapus agar periode berikutnya penuh harga baru.
+  if (ganti && daySerialFromIso(ganti.iso) > daySerialFromIso(startIso) && daySerialFromIso(ganti.iso) <= daySerialFromIso(endIso)) {
+    await updatePelanggan(idPelanggan, {
+      tglGantiPaket: FieldValue.delete(),
+      hargaSebelumGanti: FieldValue.delete(),
+    });
+  }
   return { orderId, period: startIso, label, nominal, docId: ref.id };
 }
 async function ensureMonthlyInvoice(idPelanggan, now = new Date()) {
@@ -306,10 +340,11 @@ async function ensureMonthlyInvoice(idPelanggan, now = new Date()) {
   let effStart = startIso;
   if (tglPasangIso && daySerialFromIso(tglPasangIso) > daySerialFromIso(effStart)) effStart = tglPasangIso;
   // Hari-hari sebelum pelanggan aktif kembali (setelah isolir) tidak ditagih:
-  const aktifIso = p.tglAktifKembali
-    ? (p.tglAktifKembali.toDate ? p.tglAktifKembali.toDate() : new Date(p.tglAktifKembali))
+  const aktifRaw = customer.tglAktifKembali
+    ? (customer.tglAktifKembali.toDate ? customer.tglAktifKembali.toDate() : new Date(customer.tglAktifKembali))
     : null;
-  if (aktifIso && !isNaN(aktifIso)) {
+  const aktifIso = aktifRaw && !isNaN(aktifRaw.getTime()) ? aktifRaw : null;
+  if (aktifIso) {
     const ap = nowJakartaParts(aktifIso);
     const aktifDay = `${ap.year}-${ap.month}-${ap.day}`;
     if (daySerialFromIso(aktifDay) > daySerialFromIso(effStart) && daySerialFromIso(aktifDay) <= daySerialFromIso(endIso)) {
@@ -481,6 +516,12 @@ async function kelolaPelanggan(body) {
       const harga = toNumber(body.harga);
       if (!Number.isInteger(harga) || harga <= 0) throw new Error("Nominal pembayaran tidak valid.");
       updates.harga = harga;
+      // Poin 3: perubahan paket/harga di tengah periode → prorate ganda pada invoice berikutnya.
+      const hargaLama = toNumber(existing.harga);
+      if (hargaLama > 0 && harga !== hargaLama) {
+        updates.hargaSebelumGanti = hargaLama;
+        updates.tglGantiPaket = new Date();
+      }
     }
     if (body.password !== undefined && String(body.password).trim() !== "") updates.password = requiredText(body.password, 64);
     if (body.noWhatsApp !== undefined) updates.noWhatsApp = String(body.noWhatsApp).replace(/[^0-9]/g, "");
@@ -492,6 +533,57 @@ async function kelolaPelanggan(body) {
     if (!Object.keys(updates).length) throw new Error("Input tidak valid.");
     await updatePelanggan(id, updates);
     return { id, pesan: "Pelanggan diperbarui." };
+  }
+
+  // Poin 1: tandai satu/ beberapa invoice PENDING milik pelanggan sudah dibayar cash.
+  // Efeknya identik dengan pelunasan Midtrans: statusSistem AKTIF, tglAktifKembali,
+  // terbitkan invoice periode penuh sebelum isolir, sinkron statusPembayaran.
+  if (mode === "tagihanCash") {
+    const id = validId(body.id);
+    const orderIds = Array.isArray(body.orderIds)
+      ? body.orderIds.map((o) => String(o)).filter(Boolean)
+      : [];
+    if (!orderIds.length) throw new Error("Pilih tagihan yang dibayar cash.");
+    const invoices = await allInvoices(id);
+    const targets = invoices.filter((inv) =>
+      orderIds.includes(String(inv.orderId)) &&
+      ["PENDING", "EXPIRE", "EXPIRED", "CANCEL", "DENY", "FAILED"].includes(String(inv.status).toUpperCase()));
+    if (!targets.length) throw new Error("Tagihan tidak ditemukan / sudah lunas.");
+    for (const inv of targets) {
+      await updateInvoice(inv.docId, { status: "SETTLEMENT", metode: "CASH" });
+      await db().collection(COL.pembayaran).add({
+        tgl: FieldValue.serverTimestamp(),
+        orderId: String(inv.orderId),
+        status: "SETTLEMENT",
+        nominal: toNumber(inv.nominal),
+        metode: "CASH",
+      });
+    }
+    await updatePelanggan(id, { statusSistem: "AKTIF", tglAktifKembali: new Date() });
+    aktifkanUser(id);
+    try { await terbitkanInvoiceBerikutnya(id, new Date()); }
+    catch (e) { console.error("tagihanCash berantai:", e); }
+    await syncStatusPembayaran(id);
+    return { id, pesan: `${targets.length} tagihan ditandai lunas (cash).`, lunas: targets.map((t) => t.orderId) };
+  }
+
+  // Daftar tagihan belum lunas milik satu pelanggan (untuk dialog "Tandai Tagihan Cash").
+  if (mode === "listTagihan") {
+    const id = validId(body.id);
+    const invoices = await allInvoices(id);
+    const rows = invoices
+      .filter((inv) => !["SETTLEMENT"].includes(String(inv.status).toUpperCase()))
+      .map((inv) => ({
+        orderId: String(inv.orderId),
+        periodeLabel: inv.periodeLabel || periodLabelForDashboard(periodStartIsoFromLabel(String(inv.periode))),
+        periodeMulai: inv.periodeMulai || periodStartIsoFromLabel(String(inv.periode)),
+        periodeAkhir: inv.periodeAkhir || servicePeriodEndIso(periodStartIsoFromLabel(String(inv.periode))),
+        nominal: toNumber(inv.nominal),
+        status: String(inv.status).toUpperCase(),
+      }))
+      .filter((r) => !isNaN(periodOrderKey(r.periodeMulai)))
+      .sort((a, b) => periodOrderKey(a.periodeMulai) - periodOrderKey(b.periodeMulai));
+    return { tagihan: rows };
   }
 
   if (mode === "webhooklog") {

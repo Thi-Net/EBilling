@@ -715,8 +715,14 @@
   return map[m - 1] + " " + y;
 }
 
-function namaBulanTagihan(tglJatuhTempo) {
-      const bulan = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+function namaBulanTagihan(tglJatuhTempo, periodeAkhir) {
+      // Bulan tagihan = bulan AKHIR periode layanan (tgl 20), bukan bulan jatuh tempo.
+      // Contoh: periode 21 Agu-20 Sep, due 20 Okt → tagihan bulan September.
+      const iso = String(periodeAkhir || "");
+      if (/^\d{4}-\d{2}-\d{2}/.test(iso)) {
+        const bulan = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+        return bulan[Number(iso.slice(5, 7)) - 1] || "";
+      }
       const d0 = new Date(tglJatuhTempo);
       if (isNaN(d0.getTime())) return "";
       return bulan[d0.getMonth()];
@@ -828,7 +834,7 @@ function formatCurrency(value) {
 
       el.welcomeText.textContent = `${data.user.nama} • ${data.user.id}`;
       const adaTagihanAktif = data.user.adaTagihan !== false && data.user.statusPembayaran !== "LUNAS";
-      const bulanTagihan = adaTagihanAktif && data.user.tglJatuhTempo ? namaBulanTagihan(data.user.tglJatuhTempo) : "";
+      const bulanTagihan = adaTagihanAktif && data.user.tglJatuhTempo ? namaBulanTagihan(data.user.tglJatuhTempo, data.user.periodeTagihanAkhir) : "";
       if (String(data.user.statusSistem).toUpperCase() === "TERISOLIR") {
         el.heroMessage.textContent = bulanTagihan
           ? `Segera lakukan pembayaran tagihan bulan ${bulanTagihan} untuk mengaktifkan layanan.`

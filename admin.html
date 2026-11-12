@@ -456,6 +456,7 @@
     .crud-actions .btn-primary { background: linear-gradient(135deg,#051441,#3763EB); color: #fff; border: none; padding: 9px 16px; border-radius: 8px; cursor: pointer; }
     .crud-row-actions button { border: none; cursor: pointer; padding: 6px 10px; border-radius: 7px; font-size: 12.5px; margin-right: 6px; }
     .crud-btn-edit { background: #e8eefc; color: #2b56c6; }
+    .crud-btn-cash { background: #e6f7ee; color: #178a50; }
     .crud-btn-del { background: #fdecec; color: #c03535; }
   
     .tab-bar { display: flex; gap: 8px; margin: 18px 0; flex-wrap: wrap; }
@@ -678,6 +679,19 @@
           <button type="submit" id="paketSimpan" class="btn-primary">Simpan</button>
         </div>
         <div id="paketDialogFeedback" class="feedback"></div>
+      </form>
+    </dialog>
+
+    <dialog id="cashDialog" class="crud-dialog">
+      <form id="cashForm" method="dialog">
+        <h3 id="cashTitle">Tandai Tagihan Cash</h3>
+        <p class="muted" style="font-size:13px">Centang tagihan yang SUDAH dibayar tunai. Pelanggan akan langsung diaktifkan; tagihan yang tidak dicentang tetap menunggu pembayaran.</p>
+        <div id="cashList" style="max-height:260px;overflow:auto"></div>
+        <div class="crud-actions">
+          <button type="button" id="cashBatal" class="btn-ghost">Batal</button>
+          <button type="submit" id="cashSimpan" class="btn-primary">Tandai Lunas</button>
+        </div>
+        <div id="cashFeedback" class="feedback"></div>
       </form>
     </dialog>
   </main>
@@ -1021,6 +1035,7 @@
             <td>${escapeHtml(c.noWhatsApp || "-")}</td>
             <td class="crud-row-actions">
               <button type="button" class="crud-btn-edit" data-edit="${escapeHtml(c.id)}">Edit</button>
+              <button type="button" class="crud-btn-cash" data-cash="${escapeHtml(c.id)}" data-nama="${escapeHtml(c.nama)}">Tagihan Cash</button>
               <button type="button" class="crud-btn-del" data-del="${escapeHtml(c.id)}" data-nama="${escapeHtml(c.nama)}">Hapus</button>
             </td>
           </tr>`).join("");
@@ -1075,6 +1090,54 @@
           await loadDashboard();
         } catch (error) { alert(error.message); }
       }
+      const cashBtn = event.target.closest("[data-cash]");
+      if (cashBtn) {
+        try {
+          const data = await crudCall({ mode: "listTagihan", id: cashBtn.dataset.cash });
+          const tagihan = data.tagihan || [];
+          document.getElementById("cashTitle").textContent = "Tandai Tagihan Cash: " + cashBtn.dataset.cash;
+          const listEl = document.getElementById("cashList");
+          if (!tagihan.length) {
+            listEl.innerHTML = '<div class="empty-state">Tidak ada tagihan belum lunas.</div>';
+          } else {
+            listEl.innerHTML = tagihan.map((t) => `
+              <label style="display:flex;gap:8px;align-items:flex-start;padding:8px 0;border-bottom:1px solid #eef1f6">
+                <input type="checkbox" name="cashOrder" value="${escapeHtml(t.orderId)}" style="margin-top:3px">
+                <span><strong>${escapeHtml(t.periodeLabel)}</strong> (${escapeHtml(t.periodeMulai)} s/d ${escapeHtml(t.periodeAkhir)})<br>
+                <span class="muted">${formatCurrency(t.nominal)} • ${escapeHtml(t.status)}</span></span>
+              </label>`).join("");
+          }
+          document.getElementById("cashFeedback").textContent = "";
+          document.getElementById("cashDialog").showModal();
+        } catch (error) { alert(error.message); }
+      }
+    });
+
+    document.getElementById("cashBatal").addEventListener("click", () => document.getElementById("cashDialog").close());
+
+    document.getElementById("cashForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const checked = [...document.querySelectorAll("#cashList input[name='cashOrder']:checked")].map((c) => c.value);
+      if (!checked.length) {
+        document.getElementById("cashFeedback").textContent = "Centang minimal satu tagihan.";
+        document.getElementById("cashFeedback").className = "feedback error";
+        return;
+      }
+      // id pelanggan diambil dari judul dialog "Tandai Tagihan Cash: <id>"
+      const pid = document.getElementById("cashTitle").textContent.split(":").pop().trim();
+      const btn = document.getElementById("cashSimpan");
+      btn.disabled = true;
+      try {
+        const res = await crudCall({ mode: "tagihanCash", id: pid, orderIds: checked });
+        document.getElementById("cashDialog").close();
+        alert(res.pesan || "Tagihan ditandai lunas.");
+        await muatCrud();
+        await loadDashboard();
+      } catch (error) {
+        const fb = document.getElementById("cashFeedback");
+        fb.textContent = error.message || "Gagal.";
+        fb.className = "feedback error";
+      } finally { btn.disabled = false; }
     });
 
     crud.form.addEventListener("submit", async (event) => {

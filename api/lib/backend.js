@@ -343,13 +343,25 @@ async function terbitkanInvoiceBerikutnya(idPelanggan, now = new Date()) {
   const sudah = invoices.some((inv) => periodOrderKey(inv.periode) === periodOrderKey(nextStartIso));
   if (sudah) return null;
   // tgl isolir: harus dipakai penuh sebelum isolir (akhir periode < tgl isolir). Ambil tglIsolir terakhir.
+  // Batas pemakaian penuh: tglIsolir; fallback utk data lama: tglAktifKembali (pelanggan terisolir sampai lunas).
+  let batasIso = "";
   const isoSnap = customer.tglIsolir
     ? (customer.tglIsolir.toDate ? customer.tglIsolir.toDate() : new Date(customer.tglIsolir))
     : null;
-  if (!isoSnap || isNaN(isoSnap)) return null;
-  const ip = nowJakartaParts(isoSnap);
-  const isolirIso = `${ip.year}-${ip.month}-${ip.day}`;
-  if (daySerialFromIso(nextEndIso) >= daySerialFromIso(isolirIso)) return null; // tidak dipakai penuh → lewati
+  if (isoSnap && !isNaN(isoSnap)) {
+    const ip = nowJakartaParts(isoSnap);
+    batasIso = `${ip.year}-${ip.month}-${ip.day}`;
+  } else {
+    const ak = customer.tglAktifKembali
+      ? (customer.tglAktifKembali.toDate ? customer.tglAktifKembali.toDate() : new Date(customer.tglAktifKembali))
+      : null;
+    if (ak && !isNaN(ak)) {
+      const ap = nowJakartaParts(ak);
+      batasIso = `${ap.year}-${ap.month}-${ap.day}`;
+    }
+  }
+  if (!batasIso) return null;
+  if (daySerialFromIso(nextEndIso) >= daySerialFromIso(batasIso)) return null; // tidak dipakai penuh → lewati
   const tglPasangIso = String(customer.tglPasang || "").slice(0, 10);
   let eff = nextStartIso;
   if (tglPasangIso && daySerialFromIso(tglPasangIso) > daySerialFromIso(eff)) eff = tglPasangIso;

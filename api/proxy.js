@@ -6,7 +6,7 @@ import { handleAction, errorResponse } from "./lib/backend.js";
 
 const ACTIONS = new Set([
   "login", "logout", "dashboardClient", "dashboardAdmin", "kirimKeluhan",
-  "updateBroadcast", "updateStatusKeluhan", "generateInvoiceMidtrans", "kelolaPelanggan",
+  "updateBroadcast", "updateStatusKeluhan", "generateInvoiceMidtrans", "kelolaPelanggan", "kelolaPaket",
 ]);
 
 export default async function handler(req, res) {

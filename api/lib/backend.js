@@ -537,7 +537,62 @@ async function kelolaPelanggan(body) {
     return { id, pesan: "Pelanggan dihapus." };
   }
 
+  if (body.action === "kelolaPaket") {
+    await requireRole(session, "admin");
+    return { success: true, data: await kelolaPaket(body) };
+  }
+
   throw new Error("Action tidak dikenali.");
+}
+
+async function kelolaPaket(body) {
+  const mode = String(body.mode || "list");
+  const col = db().collection(COL.paket || "paket");
+  if (mode === "list") {
+    const snap = await col.get();
+    let rows = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    if (!rows.length) {
+      // default awal
+      const defaults = [
+        { id: "PAKET A", nama: "PAKET A", nominal: 100000 },
+        { id: "PAKET B", nama: "PAKET B", nominal: 200000 },
+      ];
+      for (const p of defaults) await col.doc(p.id).set(p);
+      rows = defaults;
+    }
+    rows.sort((a, b) => String(a.nama).localeCompare(String(b.nama)));
+    return { paket: rows };
+  }
+  if (mode === "create") {
+    const nama = requiredText(body.nama, 60);
+    const nominal = toNumber(body.nominal);
+    if (!Number.isInteger(nominal) || nominal <= 0) throw new Error("Nominal tidak valid.");
+    const id = nama.toUpperCase().replace(/[^A-Z0-9 ]/g, "").replace(/\s+/g, " ").trim() || nama.toUpperCase();
+    const exists = await col.doc(id).get();
+    if (exists.exists) throw new Error("Paket sudah ada.");
+    await col.doc(id).set({ id, nama, nominal });
+    return { pesan: "Paket ditambahkan." };
+  }
+  if (mode === "update") {
+    const id = requiredText(body.id, 60);
+    const doc0 = await col.doc(id).get();
+    if (!doc0.exists) throw new Error("Paket tidak ditemukan.");
+    const updates = {};
+    if (body.nama !== undefined) updates.nama = requiredText(body.nama, 60);
+    if (body.nominal !== undefined) {
+      const nominal = toNumber(body.nominal);
+      if (!Number.isInteger(nominal) || nominal <= 0) throw new Error("Nominal tidak valid.");
+      updates.nominal = nominal;
+    }
+    await col.doc(id).set(updates, { merge: true });
+    return { pesan: "Paket diperbarui." };
+  }
+  if (mode === "delete") {
+    const id = requiredText(body.id, 60);
+    await col.doc(id).delete();
+    return { pesan: "Paket dihapus." };
+  }
+  throw new Error("Input tidak valid.");
 }
 
 // ---------------------------------------------------------------------------

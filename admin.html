@@ -503,6 +503,7 @@
     <nav class="tab-bar" role="tablist">
       <button class="tab-btn active" id="tabBtnDashboard" data-tab="dashboard" type="button">Dashboard</button>
       <button class="tab-btn" id="tabBtnKelola" data-tab="kelola" type="button">Kelola Data Pelanggan</button>
+      <button class="tab-btn" id="tabBtnPaket" data-tab="paket" type="button">Kelola Paket</button>
     </nav>
 
     <!-- ======== TAB DASHBOARD ======== -->
@@ -642,6 +643,40 @@
 
       
     </section>
+    <!-- ======== TAB KELOLA PAKET ======== -->
+    <div id="panelPaket" class="tab-panel">
+      <section class="dash-card">
+        <div class="panel-head">
+          <div>
+            <h2>Kelola Paket</h2>
+            <p class="muted">Daftar paket &amp; nominal tagihan bulanan. Dipakai di dropdown pilihan paket pelanggan.</p>
+          </div>
+          <button id="btnTambahPaket" class="btn-primary" type="button">+ Tambah Paket</button>
+        </div>
+        <div class="table-wrap">
+          <table class="crud-table">
+            <thead>
+              <tr><th>Nama Paket</th><th>Nominal (Rp)</th><th class="ta-right">Aksi</th></tr>
+            </thead>
+            <tbody id="paketTableBody"></tbody>
+          </table>
+        </div>
+        <div id="paketFeedback" class="feedback"></div>
+      </section>
+    </div>
+
+    <dialog id="paketDialog" class="crud-dialog">
+      <form id="paketForm" method="dialog">
+        <h3 id="paketTitle">Tambah Paket</h3>
+        <label>Nama Paket<br><input name="nama" id="paketNama" required maxlength="60" placeholder="PAKET C"></label>
+        <label>Nominal (Rp)<br><input name="nominal" id="paketNominal" required type="number" min="1" step="1"></label>
+        <div class="crud-actions">
+          <button type="button" id="paketBatal" class="btn-ghost">Batal</button>
+          <button type="submit" id="paketSimpan" class="btn-primary">Simpan</button>
+        </div>
+        <div id="paketFeedback" class="feedback"></div>
+      </form>
+    </dialog>
   </main>
 
   <dialog id="crudDialog" class="crud-dialog">
@@ -649,8 +684,8 @@
       <h3 id="crudTitle">Tambah Pelanggan</h3>
       <label>ID Pelanggan<br><input name="id" id="crudId" required pattern="[A-Za-z0-9_-]{2,24}"></label>
       <label>Nama Lengkap<br><input name="nama" id="crudNama" required maxlength="120"></label>
-      <label>Paket<br><input name="paket" id="crudPaket" required maxlength="60" placeholder="PAKET A"></label>
-      <label>Harga (Rp)<br><input name="harga" id="crudHarga" required type="number" min="1" step="1"></label>
+      <label>Paket<br><select name="paket" id="crudPaket" required></select></label>
+      <label>Harga (Rp)<br><input name="harga" id="crudHarga" required type="number" min="1" step="1" readonly title="Otomatis mengikuti paket yang dipilih"></label>
       <label>Password<br><input name="password" id="crudPassword" required maxlength="64"></label>
       <label>No. WhatsApp<br><input name="noWhatsApp" id="crudWa" type="tel" maxlength="16" placeholder="62xxxxxxxxxx"></label>
       <label>Status Sistem<br>
@@ -996,8 +1031,8 @@
       crud.id.value = customer ? customer.id : "";
       crud.id.disabled = mode === "edit";
       crud.nama.value = customer ? customer.nama : "";
-      crud.paket.value = customer ? customer.paket : "";
-      crud.harga.value = customer ? customer.harga : "";
+      isiDropdownPaket(customer ? customer.paket : "");
+      if (customer) crud.harga.value = customer.harga;
       crud.password.value = "";
       crud.password.required = mode === "create";
       crud.password.placeholder = mode === "edit" ? "(kosongkan bila tidak diganti)" : "";
@@ -1055,6 +1090,119 @@
     });
 
     muatCrud();
+
+    // ---- Kelola Paket ----
+    let daftarPaket = [];
+    const paket = {
+      tableBody: document.getElementById("paketTableBody"),
+      btnTambah: document.getElementById("btnTambahPaket"),
+      dialog: document.getElementById("paketDialog"),
+      form: document.getElementById("paketForm"),
+      title: document.getElementById("paketTitle"),
+      nama: document.getElementById("paketNama"),
+      nominal: document.getElementById("paketNominal"),
+      feedback: document.getElementById("paketFeedback"),
+      select: document.getElementById("crudPaket"),
+      harga: document.getElementById("crudHarga"),
+    };
+    let paketMode = "create";
+    let paketEditId = "";
+
+    function paketFeedback(message, type) {
+      paket.feedback.textContent = message || "";
+      paket.feedback.className = "feedback " + (type || "");
+    }
+
+    function paketCall(payload) {
+      return fetch(API_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...payload, action: "kelolaPaket", token: session.token })
+      }).then((r) => r.json()).then((result) => {
+        if (!result.success) throw new Error(result.message || "Permintaan gagal.");
+        return result.data;
+      });
+    }
+
+    function isiDropdownPaket(terpilih) {
+      const opts = daftarPaket.map((p) =>
+        `<option value="${escapeHtml(p.nama)}" data-nominal="${p.nominal}" ${p.nama === terpilih ? "selected" : ""}>${escapeHtml(p.nama)}</option>`).join("");
+      paket.select.innerHTML = opts || '<option value="">(belum ada paket)</option>';
+      const sel = paket.select.selectedOptions[0];
+      if (sel) paket.harga.value = sel.dataset.nominal || "";
+    }
+
+    paket.select.addEventListener("change", () => {
+      const sel = paket.select.selectedOptions[0];
+      if (sel) paket.harga.value = sel.dataset.nominal || "";
+    });
+
+    async function muatPaket(terpilih) {
+      try {
+        const data = await paketCall({ mode: "list" });
+        daftarPaket = data.paket || [];
+        isiDropdownPaket(terpilih);
+        paket.tableBody.innerHTML = daftarPaket.map((p) => `
+          <tr>
+            <td><strong>${escapeHtml(p.nama)}</strong></td>
+            <td>${formatCurrency(p.nominal)}</td>
+            <td class="crud-row-actions">
+              <button type="button" class="crud-btn-edit" data-pedit="${escapeHtml(p.id)}" data-pnama="${escapeHtml(p.nama)}" data-pnominal="${p.nominal}">Edit</button>
+              <button type="button" class="crud-btn-del" data-pdel="${escapeHtml(p.id)}" data-pnama="${escapeHtml(p.nama)}">Hapus</button>
+            </td>
+          </tr>`).join("");
+      } catch (error) {
+        paket.tableBody.innerHTML = `<tr><td colspan="3" class="empty-state">${escapeHtml(error.message)}</td></tr>`;
+      }
+    }
+
+    paket.btnTambah.addEventListener("click", () => {
+      paketMode = "create"; paketEditId = "";
+      paket.title.textContent = "Tambah Paket";
+      paket.nama.value = ""; paket.nominal.value = "";
+      paketFeedback("", "");
+      paket.dialog.showModal();
+    });
+
+    paket.tableBody.addEventListener("click", async (event) => {
+      const eBtn = event.target.closest("[data-pedit]");
+      const dBtn = event.target.closest("[data-pdel]");
+      if (eBtn) {
+        paketMode = "update"; paketEditId = eBtn.dataset.pedit;
+        paket.title.textContent = "Edit Paket";
+        paket.nama.value = eBtn.dataset.pnama;
+        paket.nominal.value = eBtn.dataset.pnominal;
+        paketFeedback("", "");
+        paket.dialog.showModal();
+      }
+      if (dBtn) {
+        if (!confirm(`Hapus paket ${dBtn.dataset.pnama}?`)) return;
+        try { await paketCall({ mode: "delete", id: dBtn.dataset.pdel }); await muatPaket(paket.select.value); }
+        catch (error) { paketFeedback(error.message, "error"); }
+      }
+    });
+
+    paket.form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const btn = document.getElementById("paketSimpan");
+      btn.disabled = true;
+      try {
+        if (paketMode === "create") {
+          await paketCall({ mode: "create", nama: paket.nama.value.trim(), nominal: Number(paket.nominal.value) });
+        } else {
+          await paketCall({ mode: "update", id: paketEditId, nama: paket.nama.value.trim(), nominal: Number(paket.nominal.value) });
+        }
+        paket.dialog.close();
+        await muatPaket(paket.select.value);
+      } catch (error) {
+        paketFeedback(error.message, "error");
+      } finally { btn.disabled = false; }
+    });
+
+    paket.batal.addEventListener("click", () => paket.dialog.close());
+
+    // Muat paket saat init (untuk dropdown CRUD pelanggan)
+    muatPaket(paket.select.value);
 </script>
 </body>
 </html>

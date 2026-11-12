@@ -684,6 +684,7 @@ async function handleMidtransWebhookInner(payload) {
   aktifkanUser(id);
   await logPembayaran(payload, "SETTLEMENT");
   await updateInvoice(invoice.docId, { status: "SETTLEMENT" });
+  try { await db().collection("webhook_log").add({ tgl: FieldValue.serverTimestamp(), orderId: "[OK] " + payload.order_id, pesan: "Webhook settlement diproses." }); } catch (e) {}
 
   try { await ensureMonthlyInvoice(id, new Date()); }
   catch (chainError) { console.error("Gagal terbitkan invoice berantai:", chainError); }

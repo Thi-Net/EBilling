@@ -321,6 +321,40 @@ async function ensureMonthlyInvoice(idPelanggan, now = new Date()) {
 }
 
 
+// Terbitkan invoice periode yang dipakai PENUH sebelum isolir, saat tunggakan dilunasi.
+// user14: tunggakan Agu-Sep (s.d. 20 Sep) dilunasi 12 Nov; isolir sejak 21 Okt → periode Sep-Okt
+// (21 Sep-20 Okt) dipakai penuh → terbit invoice penuh dgn due 20 Nov. Prorate 12-20 Nov nanti tgl 1 Des
+// (via ensureMonthlyInvoice dgn tglAktifKembali).
+async function terbitkanInvoiceBerikutnya(idPelanggan, now = new Date()) {
+  const invoices = await allInvoices(idPelanggan);
+  if (findLatestUnpaid(invoices)) return null; // satu tagihan aktif pada satu waktu
+  const customer = await findPelangganById(idPelanggan);
+  if (!customer) return null;
+  const lastSettledKey = findLatestSettledPeriod(invoices);
+  if (lastSettledKey === null) return null;
+  // periode berikutnya = mulai 21 bulan setelah mulai periode terakhir yang lunas
+  const lastStartIso = isoFromDaySerial(lastSettledKey);
+  const nextStart = new Date(daySerialFromIso(lastStartIso) * 86400000);
+  const nextStartIso = isoFromDaySerial(Math.floor(new Date(Date.UTC(nextStart.getUTCFullYear(), nextStart.getUTCMonth() + 1, PERIOD_START_DAY)).getTime() / 86400000));
+  const nextEndIso = servicePeriodEndIso(nextStartIso);
+  // sudah ada invoice utk periode ini?
+  const sudah = invoices.some((inv) => periodOrderKey(inv.periode) === periodOrderKey(nextStartIso));
+  if (sudah) return null;
+  // tgl isolir: harus dipakai penuh sebelum isolir (akhir periode < tgl isolir). Ambil tglIsolir terakhir.
+  const isoSnap = customer.tglIsolir
+    ? (customer.tglIsolir.toDate ? customer.tglIsolir.toDate() : new Date(customer.tglIsolir))
+    : null;
+  if (!isoSnap || isNaN(isoSnap)) return null;
+  const ip = nowJakartaParts(isoSnap);
+  const isolirIso = `${ip.year}-${ip.month}-${ip.day}`;
+  if (daySerialFromIso(nextEndIso) >= daySerialFromIso(isolirIso)) return null; // tidak dipakai penuh → lewati
+  const tglPasangIso = String(customer.tglPasang || "").slice(0, 10);
+  let eff = nextStartIso;
+  if (tglPasangIso && daySerialFromIso(tglPasangIso) > daySerialFromIso(eff)) eff = tglPasangIso;
+  if (daySerialFromIso(eff) > daySerialFromIso(nextEndIso)) return null;
+  return createInvoiceRow(idPelanggan, nextStartIso, eff);
+}
+
 // ---------------------------------------------------------------------------
 // Mikrotik (stub — sama seperti versi Apps Script)
 // ---------------------------------------------------------------------------
@@ -824,6 +858,8 @@ async function handleMidtransWebhookInner(payload) {
   try { await db().collection("webhook_log").add({ tgl: FieldValue.serverTimestamp(), orderId: "[OK] " + payload.order_id, pesan: "Webhook settlement diproses." }); } catch (e) {}
 
   await updatePelanggan(id, { tglAktifKembali: new Date() });
+  try { await terbitkanInvoiceBerikutnya(id, new Date()); }
+  catch (chainError) { console.error("Gagal terbitkan invoice berikutnya:", chainError); }
   await syncStatusPembayaran(id);
 
   return { success: true, message: "Pembayaran berhasil diproses.", data: { idPelanggan: id } };
@@ -865,6 +901,7 @@ export async function reconcilePending() {
         await logPembayaran({ order_id: inv.orderId, gross_amount: String(inv.nominal), payment_type: cur.payment_type }, "SETTLEMENT");
         await updateInvoice(doc.id, { status: "SETTLEMENT" });
         await updatePelanggan(id, { tglAktifKembali: new Date() });
+        try { await terbitkanInvoiceBerikutnya(id, new Date()); } catch (e) { console.error("berantai:", e); }
         await syncStatusPembayaran(id);
         disinkron++;
       } else if (["expire", "cancel", "deny"].includes(status) && inv.status === "PENDING") {
@@ -905,7 +942,7 @@ export async function dailyJob() {
       const dueDay = Number(String(due.toISOString ? "" : "") ) || 0;
       const dueIso = formatDateOnly(due);
       if (dueIso && daySerialFromIso(dueIso) < daySerialFromIso(formatDateOnly(now))) {
-        await updatePelanggan(p.id, { statusSistem: "TERISOLIR" });
+        await updatePelanggan(p.id, { statusSistem: "TERISOLIR", tglIsolir: FieldValue.serverTimestamp() });
         isolirUser(p.id);
         hasil.isolir++;
       }

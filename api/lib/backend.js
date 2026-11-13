@@ -920,10 +920,20 @@ async function chatAi(idPelanggan, riwayat) {
   if (!p) throw new Error("Pelanggan tidak ditemukan.");
   const invoices = await allInvoices(idPelanggan);
   const open = findLatestUnpaid(invoices);
+  // Product knowledge: kecepatan & use-case tiap paket (dipetakan dari nama paket).
+  const PAKET_INFO = {
+    "PAKET A": { kecepatan: "50 Mbps", namaPemasaran: "Paket Hemat", cocok: "browsing, belajar online, streaming ringan, 2-3 perangkat" },
+    "PAKET B": { kecepatan: "100 Mbps", namaPemasaran: "Paket Ngebut", cocok: "streaming HD/4K, meeting online, CCTV, keluarga aktif multi-device" },
+    "PAKET C": { kecepatan: "200 Mbps", namaPemasaran: "Paket Sultan", cocok: "gaming kompetitif, streaming 4K, smart home, usaha, banyak perangkat sekaligus" },
+  };
   const paketList = await (async () => {
     try {
       const snap = await db().collection("paket").get();
-      return snap.docs.map((d) => `${d.data().nama} Rp${toNumber(d.data().nominal).toLocaleString("id-ID")}`).join(", ") || "-";
+      return snap.docs.map((d) => {
+        const info = PAKET_INFO[String(d.data().nama).toUpperCase()] || PAKET_INFO[String(d.data().id).toUpperCase()];
+        const nama = d.data().nama || d.data().id;
+        return info ? `${nama} (${info.namaPemasaran}): ${info.kecepatan}, Rp${toNumber(d.data().nominal).toLocaleString("id-ID")}/bulan, cocok untuk ${info.cocok}` : `${nama}: Rp${toNumber(d.data().nominal).toLocaleString("id-ID")}/bulan`;
+      }).join("\n") || "-";
     } catch (e) { return "-"; }
   })();
   const konteks = {
@@ -941,6 +951,14 @@ async function chatAi(idPelanggan, riwayat) {
   const system = `Kamu adalah "Asisten ThiNet", chatbot layanan pelanggan ISP ThiNet. Jawab SELALU dalam Bahasa Indonesia, ramah, RINGKAS (maksimal ~5 baris), tanpa kode, tanpa istilah teknis backend.
 
 Tugasmu HANYA: membantu kendala (1) gangguan jaringan/internet, (2) tagihan & pembayaran, (3) upgrade/pindah paket, (4) pertanyaan umum layanan ThiNet.
+
+PENGETAHUAN PRODUK THINET (jawab pertanyaan kecepatan/paket dari data ini):
+- Jaringan ThiNet full fiber optic, stabil, tahan cuaca, latensi rendah (cocok game online).
+- Daftar paket (kecepatan = kecepatan unduh):
+${paketList}
+- Saat pelanggan tanya kecepatan internetnya, jawab dari paket akunnya di data akun.
+- Saat ditanya rekomendasi: tanyakan kebutuhan (berapa perangkat, aktivitas apa) lalu sarankan paket paling cocok dari daftar di atas - sebutkan kecepatan, harga, dan nama pemasarannya.
+- Upgrade/pindah paket diproses admin: arahkan ke tombol "Hubungi Admin".
 
 DATA AKUN PELANGGAN INI (informasi rahasia, WAJIB dijaga):
 ${JSON.stringify(konteks)}
@@ -972,8 +990,8 @@ CARA MENJAWAB:
     if (/(lambat|lemot|putus|mati|ganggu|down|error|internet|wifi|onu|router|kabel|sinyal|tidak bisa konek|disconnect)/.test(q)) {
       return `Untuk gangguan koneksi, coba langkah ini:\n1. Restart router/ONU (matikan 30 detik lalu nyalakan).\n2. Cek kabel LAN/fiber terpasang rapat.\n3. Cek lampu indikator LOS/PON di modem — jika merah/berkedip, cabut fiber lalu pasang kembali.\n4. Tes dengan satu perangkat saja.\n\nJika tetap bermasalah, tekan tombol "Hubungi Admin" di bawah — tim kami akan periksa jaringan Anda.`;
     }
-    if (/(upgrade|ganti paket|paket|niche|harga|tarif)/.test(q)) {
-      return `Paket Anda saat ini: ${konteks.paket} (${formatRupiah_(konteks.harga)}/bulan).\nPaket tersedia: ${konteks.daftarPaketTersedia}.\n\nUntuk upgrade/perubahan paket, gunakan tombol "Hubungi Admin" di bawah — admin akan memproses permintaan Anda.`;
+    if (/(upgrade|ganti paket|paket|niche|harga|tarif|mbps|kecepatan|cepat)/.test(q)) {
+      return `Paket Anda saat ini: ${konteks.paket} (${formatRupiah_(konteks.harga)}/bulan).\nDaftar paket ThiNet (full fiber optic):\n${konteks.daftarPaketTersedia}.\n\nUntuk upgrade/perubahan paket, gunakan tombol "Hubungi Admin" di bawah — admin akan memproses permintaan Anda.`;
     }
     if (/(isolir|blokir|diblokir|aktif)/.test(q)) {
       return `Status layanan Anda: ${konteks.statusSistem}. ${infoTagihan}\n\nLayanan terisolir terjadi bila ada tagihan yang melewati jatuh tempo. Bayar tagihan lewat tombol "Bayar Sekarang", dan layanan aktif kembali otomatis.\n\nJika sudah bayar namun belum aktif, tekan "Hubungi Admin" di bawah.`;

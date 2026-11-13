@@ -664,6 +664,7 @@ async function kelolaPaket(body) {
     const id = requiredText(body.id, 60);
     const doc0 = await col.doc(id).get();
     if (!doc0.exists) throw new Error("Paket tidak ditemukan.");
+    const lama = doc0.data();
     const updates = {};
     if (body.nama !== undefined) updates.nama = requiredText(body.nama, 60);
     if (body.nominal !== undefined) {
@@ -672,7 +673,20 @@ async function kelolaPaket(body) {
       updates.nominal = nominal;
     }
     await col.doc(id).set(updates, { merge: true });
-    return { pesan: "Paket diperbarui." };
+    // Propagasi otomatis: semua pelanggan pemakai paket ini ikut mendapat nama & harga baru.
+    const namaLama = String(lama.nama || lama.id);
+    const pelSnap = await db().collection(COL.pelanggan).where("paket", "==", namaLama).get();
+    let terpengaruh = 0;
+    for (const doc of pelSnap.docs) {
+      const pUpd = {};
+      if (updates.nama !== undefined && doc.data().paket === namaLama) pUpd.paket = updates.nama;
+      if (updates.nominal !== undefined) pUpd.harga = updates.nominal;
+      if (Object.keys(pUpd).length) {
+        await doc.ref.set(pUpd, { merge: true });
+        terpengaruh++;
+      }
+    }
+    return { pesan: "Paket diperbarui." + (terpengaruh ? ` ${terpengaruh} pelanggan pemakai paket ini ikut diperbarui (nama/harga).` : "") };
   }
   if (mode === "delete") {
     const id = requiredText(body.id, 60);
